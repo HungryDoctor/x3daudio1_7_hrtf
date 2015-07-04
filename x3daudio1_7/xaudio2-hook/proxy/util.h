@@ -1,0 +1,22 @@
+#pragma once
+
+#include <XAudio2.h>
+#include <sstream>
+
+inline void print_sends(std::stringstream & ss, const XAUDIO2_VOICE_SENDS * pSendList)
+{
+	ss << "sends [";
+	if (pSendList)
+	{
+		if (pSendList->SendCount > 1)
+		{
+			for (UINT32 i = 0; i < pSendList->SendCount - 1; i++)
+			{
+				ss << &pSendList->pSends[i] << ", ";
+			}
+		}
+		if (pSendList->SendCount > 0)
+			ss << pSendList->pSends[pSendList->SendCount - 1].pOutputVoice;
+	}
+	ss << "]";
+}
