@@ -2,16 +2,27 @@
 #include "XAudio2SourceVoiceProxy.h"
 
 #include "XAudio2Proxy.h"
+#include "wave/WaveFile.h"
 
 #include "util.h"
 #include "logger.h"
 
-XAudio2SourceVoiceProxy::XAudio2SourceVoiceProxy(const IVoiceMapper & voice_mapper, IXAudio2SourceVoice * original, const deleter & on_destroy)
-	: m_voice_mapper(voice_mapper)
+std::wstring GetName(const XAudio2SourceVoiceProxy * ptr)
+{
+	std::wstringstream ss;
+	ss << ptr;
+	return ss.str();
+}
+
+XAudio2SourceVoiceProxy::XAudio2SourceVoiceProxy(ISound3DRegistry * sound3d_registry, const IVoiceMapper & voice_mapper, IXAudio2SourceVoice * original, const deleter & on_destroy)
+	: m_sound3d_registry(sound3d_registry)
+	, m_voice_mapper(voice_mapper)
 	, m_original(original)
 	, m_on_destroy(on_destroy)
 {
-
+	XAUDIO2_VOICE_DETAILS details;
+	original->GetVoiceDetails(&details);
+	m_wave_file.reset(new WaveFile(std::wstring(L"wavs\\") + GetName(this) + L".wav", details.InputChannels, details.InputSampleRate, 16));
 }
 
 XAudio2SourceVoiceProxy::~XAudio2SourceVoiceProxy()
@@ -31,6 +42,7 @@ HRESULT XAudio2SourceVoiceProxy::Stop(UINT32 Flags, UINT32 OperationSet)
 
 HRESULT XAudio2SourceVoiceProxy::SubmitSourceBuffer(const XAUDIO2_BUFFER * pBuffer, const XAUDIO2_BUFFER_WMA *pBufferWMA)
 {
+	m_wave_file->AppendData(pBuffer->pAudioData, pBuffer->AudioBytes);
 	return m_original->SubmitSourceBuffer(pBuffer, pBufferWMA);
 }
 
@@ -94,6 +106,7 @@ HRESULT XAudio2SourceVoiceProxy::SetOutputVoices(const XAUDIO2_VOICE_SENDS *pSen
 
 HRESULT XAudio2SourceVoiceProxy::SetEffectChain(const XAUDIO2_EFFECT_CHAIN *pEffectChain)
 {
+	logger::log("XAudio2SourceVoiceProxy::SetEffectChain", " ", this, " pEffectChain=", pEffectChain, (pEffectChain != nullptr ? " count=" + std::to_string(pEffectChain->EffectCount) : " none"));
 	return m_original->SetEffectChain(pEffectChain);
 }
 
@@ -164,7 +177,23 @@ void XAudio2SourceVoiceProxy::GetChannelVolumes(UINT32 Channels, float *pVolumes
 
 HRESULT XAudio2SourceVoiceProxy::SetOutputMatrix(IXAudio2Voice *pDestinationVoice, UINT32 SourceChannels, UINT32 DestinationChannels, const float *pLevelMatrix, UINT32 OperationSet)
 {
-	return m_original->SetOutputMatrix(m_voice_mapper.MapVoiceToOriginal(pDestinationVoice), SourceChannels, DestinationChannels, pLevelMatrix, OperationSet);
+	if (DestinationChannels == 2 && std::isnan(pLevelMatrix[0]))
+	{
+		auto & id = *reinterpret_cast<const sound_id*>(&pLevelMatrix[1]);
+		auto sound3d = m_sound3d_registry->GetEntry(id);
+
+		float matrix[XAUDIO2_MAX_AUDIO_CHANNELS * 2]; // we only support two output channels
+		for (UINT32 i = 0; i < SourceChannels; i++)
+		{
+			matrix[i * 2 + 0] = sound3d.matrix_coefficients[0];
+			matrix[i * 2 + 1] = -sound3d.matrix_coefficients[1];
+		}
+		return m_original->SetOutputMatrix(m_voice_mapper.MapVoiceToOriginal(pDestinationVoice), SourceChannels, DestinationChannels, matrix, OperationSet);
+	}
+	else
+	{
+		return m_original->SetOutputMatrix(m_voice_mapper.MapVoiceToOriginal(pDestinationVoice), SourceChannels, DestinationChannels, pLevelMatrix, OperationSet);
+	}
 }
 
 void XAudio2SourceVoiceProxy::GetOutputMatrix(IXAudio2Voice *pDestinationVoice, UINT32 SourceChannels, UINT32 DestinationChannels, float *pLevelMatrix)

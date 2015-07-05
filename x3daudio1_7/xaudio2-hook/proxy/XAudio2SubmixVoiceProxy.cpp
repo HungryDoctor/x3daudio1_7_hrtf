@@ -5,9 +5,11 @@
 
 #include "util.h"
 #include "logger.h"
+#include <cmath>
 
-XAudio2SubmixVoiceProxy::XAudio2SubmixVoiceProxy(const IVoiceMapper & voice_mapper, IXAudio2SubmixVoice * original, const deleter & on_destroy)
-	: m_voice_mapper(voice_mapper)
+XAudio2SubmixVoiceProxy::XAudio2SubmixVoiceProxy(ISound3DRegistry * sound3d_registry, const IVoiceMapper & voice_mapper, IXAudio2SubmixVoice * original, const deleter & on_destroy)
+	: m_sound3d_registry(sound3d_registry)
+	, m_voice_mapper(voice_mapper)
 	, m_original(original)
 	, m_on_destroy(on_destroy)
 {
@@ -44,6 +46,7 @@ HRESULT XAudio2SubmixVoiceProxy::SetOutputVoices(const XAUDIO2_VOICE_SENDS *pSen
 
 HRESULT XAudio2SubmixVoiceProxy::SetEffectChain(const XAUDIO2_EFFECT_CHAIN *pEffectChain)
 {
+	logger::log("XAudio2SubmixVoiceProxy::SetEffectChain", " ", this, " pEffectChain=", pEffectChain, (pEffectChain != nullptr ? " count=" + std::to_string(pEffectChain->EffectCount) : " none"));
 	return m_original->SetEffectChain(pEffectChain);
 }
 
@@ -114,7 +117,23 @@ void XAudio2SubmixVoiceProxy::GetChannelVolumes(UINT32 Channels, float *pVolumes
 
 HRESULT XAudio2SubmixVoiceProxy::SetOutputMatrix(IXAudio2Voice *pDestinationVoice, UINT32 SourceChannels, UINT32 DestinationChannels, const float *pLevelMatrix, UINT32 OperationSet)
 {
-	return m_original->SetOutputMatrix(m_voice_mapper.MapVoiceToOriginal(pDestinationVoice), SourceChannels, DestinationChannels, pLevelMatrix, OperationSet);
+	if (DestinationChannels == 2 && std::isnan(pLevelMatrix[0]))
+	{
+		auto & id = *reinterpret_cast<const sound_id*>(&pLevelMatrix[1]);
+		auto sound3d = m_sound3d_registry->GetEntry(id);
+
+		float matrix[XAUDIO2_MAX_AUDIO_CHANNELS * 2]; // we only support two output channels
+		for (UINT32 i = 0; i < SourceChannels; i++)
+		{
+			matrix[i * 2 + 0] = sound3d.matrix_coefficients[0];
+			matrix[i * 2 + 1] = -sound3d.matrix_coefficients[1];
+		}
+		return m_original->SetOutputMatrix(m_voice_mapper.MapVoiceToOriginal(pDestinationVoice), SourceChannels, DestinationChannels, matrix, OperationSet);
+	}
+	else
+	{
+		return m_original->SetOutputMatrix(m_voice_mapper.MapVoiceToOriginal(pDestinationVoice), SourceChannels, DestinationChannels, pLevelMatrix, OperationSet);
+	}
 }
 
 void XAudio2SubmixVoiceProxy::GetOutputMatrix(IXAudio2Voice *pDestinationVoice, UINT32 SourceChannels, UINT32 DestinationChannels, float *pLevelMatrix)

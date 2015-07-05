@@ -47,6 +47,7 @@ HRESULT XAudio2MasteringVoiceProxy::SetOutputVoices(const XAUDIO2_VOICE_SENDS *p
 
 HRESULT XAudio2MasteringVoiceProxy::SetEffectChain(const XAUDIO2_EFFECT_CHAIN *pEffectChain)
 {
+	logger::log("XAudio2MasteringVoiceProxy::SetEffectChain", " ", this, " pEffectChain=", pEffectChain, (pEffectChain != nullptr ? " count=" + std::to_string(pEffectChain->EffectCount) : " none"));
 	return m_original->SetEffectChain(pEffectChain);
 }
 

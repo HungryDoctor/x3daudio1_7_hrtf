@@ -3,6 +3,7 @@
 #include <atlbase.h>
 #include <atlcom.h>
 
+#include "interop/ISound3DRegistry.h"
 #include "IVoiceMapper.h"
 #include <xaudio2.h>
 #include <map>
@@ -176,6 +177,7 @@ public:
 
 public:
 	void set_voice_mapper(IVoiceMapper * voice_mapper);
+	void set_sound3d_registry(ISound3DRegistry * sound3d_registry);
 
 private:
 	void DestroyVoice(IXAudio2Voice * voice);
@@ -183,4 +185,5 @@ private:
 private:
 	ATL::CComPtr<IXAudio2> m_original;
 	std::unique_ptr<IVoiceMapper> m_voice_mapper;
+	ISound3DRegistry * m_sound3d_registry;
 };

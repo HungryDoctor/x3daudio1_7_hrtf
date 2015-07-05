@@ -72,6 +72,18 @@
     <ClInclude Include="xaudio2-hook\proxy\VoiceMapper.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="interop\ISound3DRegistry.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="interop\Sound3DRegistry.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="x3daudio-hook\X3DAudioProxy.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="wave\WaveFile.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -120,6 +132,15 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="xaudio2-hook\proxy\VoiceMapper.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="interop\Sound3DRegistry.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="x3daudio-hook\X3DAudioProxy.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="wave\WaveFile.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

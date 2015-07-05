@@ -87,10 +87,14 @@
     <ClInclude Include="disasm\disasm_x86.h" />
     <ClInclude Include="disasm\disasm_x86_tables.h" />
     <ClInclude Include="disasm\misc.h" />
+    <ClInclude Include="interop\ISound3DRegistry.h" />
+    <ClInclude Include="interop\Sound3DRegistry.h" />
     <ClInclude Include="logger.h" />
     <ClInclude Include="mhook\mhook.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
+    <ClInclude Include="wave\WaveFile.h" />
+    <ClInclude Include="x3daudio-hook\X3DAudioProxy.h" />
     <ClInclude Include="xaudio2-hook\proxy\VoiceMapper.h" />
     <ClInclude Include="x3daudio-hook\x3daudio_hook.h" />
     <ClInclude Include="xaudio2-hook\creation_hook.h" />
@@ -127,12 +131,15 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
       </PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="interop\Sound3DRegistry.cpp" />
     <ClCompile Include="logger.cpp" />
     <ClCompile Include="mhook\mhook.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="wave\WaveFile.cpp" />
+    <ClCompile Include="x3daudio-hook\X3DAudioProxy.cpp" />
     <ClCompile Include="xaudio2-hook\proxy\VoiceMapper.cpp" />
     <ClCompile Include="x3daudio-hook\x3daudio_hook.cpp" />
     <ClCompile Include="xaudio2-hook\creation_hook.cpp" />

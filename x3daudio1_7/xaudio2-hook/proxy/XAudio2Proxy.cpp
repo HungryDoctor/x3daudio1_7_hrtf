@@ -5,6 +5,7 @@
 #include "XAudio2SubmixVoiceProxy.h"
 #include "XAudio2MasteringVoiceProxy.h"
 
+#include "interop/Sound3DRegistry.h"
 #include "VoiceMapper.h"
 
 #include "logger.h"
@@ -31,6 +32,7 @@ HRESULT XAudio2Proxy::CreateInstance(IUnknown * original, REFIID riid, void ** p
 {
 	auto self = new ATL::CComObjectNoLock<XAudio2Proxy>;
 
+	self->set_sound3d_registry(&Sound3DRegistry::GetInstance());
 	self->set_voice_mapper(new VoiceMapper);
 
 	self->SetVoid(NULL);
@@ -101,7 +103,11 @@ STDMETHODIMP XAudio2Proxy::CreateSourceVoice(IXAudio2SourceVoice ** ppSourceVoic
 	{
 		try
 		{
-			*ppSourceVoice = new XAudio2SourceVoiceProxy(*m_voice_mapper, original_voice, std::bind(&XAudio2Proxy::DestroyVoice, this, std::placeholders::_1));
+			*ppSourceVoice = new XAudio2SourceVoiceProxy(m_sound3d_registry, *m_voice_mapper, original_voice, [&](auto voice)
+				{
+					m_voice_mapper->ForgetMapByProxy(voice);
+					delete voice;
+				});
 			m_voice_mapper->RememberMap(original_voice, *ppSourceVoice);
 			std::stringstream ss;
 			ss << "XAudio2Proxy::CreateSourceVoice succeeded " << *ppSourceVoice;
@@ -135,7 +141,11 @@ STDMETHODIMP XAudio2Proxy::CreateSubmixVoice(IXAudio2SubmixVoice ** ppSubmixVoic
 	{
 		try
 		{
-			*ppSubmixVoice = new XAudio2SubmixVoiceProxy(*m_voice_mapper, original_voice, std::bind(&XAudio2Proxy::DestroyVoice, this, std::placeholders::_1));
+			*ppSubmixVoice = new XAudio2SubmixVoiceProxy(m_sound3d_registry, *m_voice_mapper, original_voice, [&](auto voice)
+				{
+					m_voice_mapper->ForgetMapByProxy(voice);
+					delete voice;
+				});
 			m_voice_mapper->RememberMap(original_voice, *ppSubmixVoice);
 			std::stringstream ss;
 			ss << "XAudio2Proxy::CreateSubmixVoice succeeded " << *ppSubmixVoice;
@@ -166,7 +176,11 @@ STDMETHODIMP XAudio2Proxy::CreateMasteringVoice(IXAudio2MasteringVoice ** ppMast
 	{
 		try
 		{
-			*ppMasteringVoice = new XAudio2MasteringVoiceProxy(*m_voice_mapper, original_voice, std::bind(&XAudio2Proxy::DestroyVoice, this, std::placeholders::_1));
+			*ppMasteringVoice = new XAudio2MasteringVoiceProxy(*m_voice_mapper, original_voice, [&](auto voice)
+				{
+					m_voice_mapper->ForgetMapByProxy(voice);
+					delete voice;
+				});
 			m_voice_mapper->RememberMap(original_voice, *ppMasteringVoice);
 			std::stringstream ss;
 			ss << "XAudio2Proxy::CreateMasteringVoice succeeded " << *ppMasteringVoice;
@@ -204,6 +218,11 @@ STDMETHODIMP_(void) XAudio2Proxy::GetPerformanceData(XAUDIO2_PERFORMANCE_DATA * 
 void XAudio2Proxy::set_voice_mapper(IVoiceMapper * voice_mapper)
 {
 	m_voice_mapper = std::unique_ptr<IVoiceMapper>(voice_mapper);
+}
+
+void XAudio2Proxy::set_sound3d_registry(ISound3DRegistry * sound3d_registry)
+{
+	m_sound3d_registry = sound3d_registry;
 }
 
 void XAudio2Proxy::DestroyVoice(IXAudio2Voice * voice)
