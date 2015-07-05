@@ -3,6 +3,8 @@
 
 #include "XAudio2Proxy.h"
 
+#include <XAPO.h>
+
 #include "util.h"
 #include "logger.h"
 #include <cmath>
@@ -28,7 +30,7 @@ void XAudio2SubmixVoiceProxy::GetVoiceDetails(XAUDIO2_VOICE_DETAILS *pVoiceDetai
 
 HRESULT XAudio2SubmixVoiceProxy::SetOutputVoices(const XAUDIO2_VOICE_SENDS *pSendList)
 {
-	std::stringstream ss;
+	std::wstringstream ss;
 	ss << "XAudio2SubmixVoiceProxy::SetOutputVoices " << this << " ";
 	print_sends(ss, pSendList);
 	logger::log(ss.str());
@@ -46,7 +48,24 @@ HRESULT XAudio2SubmixVoiceProxy::SetOutputVoices(const XAUDIO2_VOICE_SENDS *pSen
 
 HRESULT XAudio2SubmixVoiceProxy::SetEffectChain(const XAUDIO2_EFFECT_CHAIN *pEffectChain)
 {
-	logger::log("XAudio2SubmixVoiceProxy::SetEffectChain", " ", this, " pEffectChain=", pEffectChain, (pEffectChain != nullptr ? " count=" + std::to_string(pEffectChain->EffectCount) : " none"));
+	std::wstringstream ss;
+	if (pEffectChain)
+	{
+		ss << "[";
+		for (INT32 i = 0; i < pEffectChain->EffectCount; i++)
+		{
+			IXAPO * effect;
+			pEffectChain->pEffectDescriptors[i].pEffect->QueryInterface(&effect);
+			XAPO_REGISTRATION_PROPERTIES * props;
+			effect->GetRegistrationProperties(&props);
+			ss << props->FriendlyName;
+			if (i < pEffectChain->EffectCount - 1)
+				ss << ", ";
+			XAPOFree(props);
+		}
+		ss << "]";
+	}
+	logger::log("XAudio2SubmixVoiceProxy::SetEffectChain", " ", this, " pEffectChain=", pEffectChain, (pEffectChain != nullptr ? L" count=" + std::to_wstring(pEffectChain->EffectCount) : L" none"), " ", ss.str());
 	return m_original->SetEffectChain(pEffectChain);
 }
 
@@ -143,7 +162,7 @@ void XAudio2SubmixVoiceProxy::GetOutputMatrix(IXAudio2Voice *pDestinationVoice, 
 
 void XAudio2SubmixVoiceProxy::DestroyVoice()
 {
-	std::stringstream ss;
+	std::wstringstream ss;
 	ss << "XAudio2SubmixVoiceProxy::DestroyVoice " << this;
 	logger::log(ss.str());
 	m_on_destroy(this);

@@ -71,7 +71,7 @@ STDMETHODIMP XAudio2Proxy::Initialize(UINT32 Flags, XAUDIO2_PROCESSOR XAudio2Pro
 {
 	logger::log("Initializing XAudio2Proxy");
 	HRESULT result = m_original->Initialize(Flags, XAudio2Processor);
-	logger::log("(Not)constructed XAudio2Proxy with result " + std::to_string(result));
+	logger::log(L"(Not)constructed XAudio2Proxy with result " + std::to_wstring(result));
 	return result;
 }
 
@@ -88,8 +88,8 @@ STDMETHODIMP_(void) XAudio2Proxy::UnregisterForCallbacks(IXAudio2EngineCallback 
 STDMETHODIMP XAudio2Proxy::CreateSourceVoice(IXAudio2SourceVoice ** ppSourceVoice, const WAVEFORMATEX * pSourceFormat, UINT32 Flags, float MaxFrequencyRatio,
 	IXAudio2VoiceCallback *pCallback, const XAUDIO2_VOICE_SENDS *pSendList, const XAUDIO2_EFFECT_CHAIN *pEffectChain)
 {
-	std::stringstream ss;
-	ss << "XAudio2Proxy::CreateSourceVoice FormatChannels=" << pSourceFormat->nChannels << " FormatSampleRate=" << pSourceFormat->nSamplesPerSec << " MaxFrequencyRatio=" << MaxFrequencyRatio << " Effects=" << (pEffectChain ? std::to_string(pEffectChain->EffectCount) : "nullptr") << " ";
+	std::wstringstream ss;
+	ss << "XAudio2Proxy::CreateSourceVoice FormatChannels=" << pSourceFormat->nChannels << " FormatSampleRate=" << pSourceFormat->nSamplesPerSec << " MaxFrequencyRatio=" << MaxFrequencyRatio << " Effects=" << (pEffectChain ? std::to_wstring(pEffectChain->EffectCount) : L"nullptr") << " ";
 	print_sends(ss, pSendList);
 	logger::log(ss.str());
 
@@ -109,7 +109,7 @@ STDMETHODIMP XAudio2Proxy::CreateSourceVoice(IXAudio2SourceVoice ** ppSourceVoic
 					delete voice;
 				});
 			m_voice_mapper->RememberMap(original_voice, *ppSourceVoice);
-			std::stringstream ss;
+			std::wstringstream ss;
 			ss << "XAudio2Proxy::CreateSourceVoice succeeded " << *ppSourceVoice;
 			logger::log(ss.str());
 		}
@@ -126,8 +126,8 @@ STDMETHODIMP XAudio2Proxy::CreateSourceVoice(IXAudio2SourceVoice ** ppSourceVoic
 
 STDMETHODIMP XAudio2Proxy::CreateSubmixVoice(IXAudio2SubmixVoice ** ppSubmixVoice, UINT32 InputChannels, UINT32 InputSampleRate, UINT32 Flags, UINT32 ProcessingStage, const XAUDIO2_VOICE_SENDS *pSendList, const XAUDIO2_EFFECT_CHAIN *pEffectChain)
 {
-	std::stringstream ss;
-	ss << "XAudio2Proxy::CreateSubmixVoice InputChannels=" << InputChannels << " InputSampleRate=" << InputSampleRate << " ProcessingStage=" << ProcessingStage << " Effects=" << (pEffectChain ? std::to_string(pEffectChain->EffectCount) : "nullptr") << " ";
+	std::wstringstream ss;
+	ss << "XAudio2Proxy::CreateSubmixVoice InputChannels=" << InputChannels << " InputSampleRate=" << InputSampleRate << " ProcessingStage=" << ProcessingStage << " Effects=" << (pEffectChain ? std::to_wstring(pEffectChain->EffectCount) : L"nullptr") << " ";
 	print_sends(ss, pSendList);
 	logger::log(ss.str());
 
@@ -147,7 +147,7 @@ STDMETHODIMP XAudio2Proxy::CreateSubmixVoice(IXAudio2SubmixVoice ** ppSubmixVoic
 					delete voice;
 				});
 			m_voice_mapper->RememberMap(original_voice, *ppSubmixVoice);
-			std::stringstream ss;
+			std::wstringstream ss;
 			ss << "XAudio2Proxy::CreateSubmixVoice succeeded " << *ppSubmixVoice;
 			logger::log(ss.str());
 		}
@@ -166,8 +166,8 @@ STDMETHODIMP XAudio2Proxy::CreateMasteringVoice(IXAudio2MasteringVoice ** ppMast
 {
 	//return m_original->CreateMasteringVoice(ppMasteringVoice, InputChannels, InputSampleRate, Flags, DeviceIndex, pEffectChain);
 
-	std::stringstream ss;
-	ss << "XAudio2Proxy::CreateMasteringVoice InputChannels=" << InputChannels << " InputSampleRate=" << InputSampleRate << " DeviceIndex=" << DeviceIndex << " Effects=" << (pEffectChain ? std::to_string(pEffectChain->EffectCount) : "nullptr") << " ";
+	std::wstringstream ss;
+	ss << "XAudio2Proxy::CreateMasteringVoice InputChannels=" << InputChannels << " InputSampleRate=" << InputSampleRate << " DeviceIndex=" << DeviceIndex << " Effects=" << (pEffectChain ? std::to_wstring(pEffectChain->EffectCount) : L"nullptr") << " ";
 	logger::log(ss.str());
 
 	IXAudio2MasteringVoice * original_voice = NULL;
@@ -182,7 +182,7 @@ STDMETHODIMP XAudio2Proxy::CreateMasteringVoice(IXAudio2MasteringVoice ** ppMast
 					delete voice;
 				});
 			m_voice_mapper->RememberMap(original_voice, *ppMasteringVoice);
-			std::stringstream ss;
+			std::wstringstream ss;
 			ss << "XAudio2Proxy::CreateMasteringVoice succeeded " << *ppMasteringVoice;
 			logger::log(ss.str());
 		}

@@ -56,6 +56,8 @@ private:
 	const IVoiceMapper & m_voice_mapper;
 	deleter m_on_destroy;
 	std::unique_ptr<WaveFile> m_wave_file;
+	bool m_has_hrtf_effect;
+	bool m_has_effect;
 
 	XAudio2SourceVoiceProxy(const XAudio2SourceVoiceProxy &) = delete;
 	XAudio2SourceVoiceProxy & operator=(const XAudio2SourceVoiceProxy &) = delete;

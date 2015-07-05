@@ -3,7 +3,7 @@
 #include <XAudio2.h>
 #include <sstream>
 
-inline void print_sends(std::stringstream & ss, const XAUDIO2_VOICE_SENDS * pSendList)
+inline void print_sends(std::wstringstream & ss, const XAUDIO2_VOICE_SENDS * pSendList)
 {
 	ss << "sends [";
 	if (pSendList)

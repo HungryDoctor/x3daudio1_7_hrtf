@@ -29,7 +29,7 @@ HRESULT XAudio2MasteringVoiceProxy::SetOutputVoices(const XAUDIO2_VOICE_SENDS *p
 {
 	// That shouldn't happen, actually. Mastering voices cannot have sends.
 
-	std::stringstream ss;
+	std::wstringstream ss;
 	ss << "XAudio2MasteringVoiceProxy::SetOutputVoices " << this << " ";
 	print_sends(ss, pSendList);
 	logger::log(ss.str());
@@ -47,7 +47,7 @@ HRESULT XAudio2MasteringVoiceProxy::SetOutputVoices(const XAUDIO2_VOICE_SENDS *p
 
 HRESULT XAudio2MasteringVoiceProxy::SetEffectChain(const XAUDIO2_EFFECT_CHAIN *pEffectChain)
 {
-	logger::log("XAudio2MasteringVoiceProxy::SetEffectChain", " ", this, " pEffectChain=", pEffectChain, (pEffectChain != nullptr ? " count=" + std::to_string(pEffectChain->EffectCount) : " none"));
+	logger::log("XAudio2MasteringVoiceProxy::SetEffectChain", " ", this, " pEffectChain=", pEffectChain, (pEffectChain != nullptr ? L" count=" + std::to_wstring(pEffectChain->EffectCount) : L" none"));
 	return m_original->SetEffectChain(pEffectChain);
 }
 
@@ -128,7 +128,7 @@ void XAudio2MasteringVoiceProxy::GetOutputMatrix(IXAudio2Voice *pDestinationVoic
 
 void XAudio2MasteringVoiceProxy::DestroyVoice()
 {
-	std::stringstream ss;
+	std::wstringstream ss;
 	ss << "XAudio2MasteringVoiceProxy::DestroyVoice " << this;
 	logger::log(ss.str());
 	m_on_destroy(this);

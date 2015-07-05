@@ -7,8 +7,6 @@
 #include "interop/ISound3dRegistry.h"
 #include "IVoiceMapper.h"
 
-class XAudio2Proxy;
-
 class XAudio2SubmixVoiceProxy : public IXAudio2SubmixVoice
 {
 public:
@@ -39,6 +37,7 @@ public:
 	STDMETHOD(SetOutputMatrix)(IXAudio2Voice *pDestinationVoice, UINT32 SourceChannels, UINT32 DestinationChannels, const float *pLevelMatrix, UINT32 OperationSet = 0U) override;
 	STDMETHOD_(void, GetOutputMatrix)(IXAudio2Voice *pDestinationVoice, UINT32 SourceChannels, UINT32 DestinationChannels, float *pLevelMatrix) override;
 	STDMETHOD_(void, DestroyVoice)() override;
+
 
 private:
 	IXAudio2SubmixVoice * m_original;

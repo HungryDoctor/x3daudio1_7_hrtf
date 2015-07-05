@@ -3,6 +3,8 @@
 
 #include "XAudio2Proxy.h"
 #include "wave/WaveFile.h"
+#include "XAPO/HrtfEffect.h"
+#include <XAPO.h>
 
 #include "util.h"
 #include "logger.h"
@@ -19,6 +21,8 @@ XAudio2SourceVoiceProxy::XAudio2SourceVoiceProxy(ISound3DRegistry * sound3d_regi
 	, m_voice_mapper(voice_mapper)
 	, m_original(original)
 	, m_on_destroy(on_destroy)
+	, m_has_hrtf_effect(false)
+	, m_has_effect(false)
 {
 	XAUDIO2_VOICE_DETAILS details;
 	original->GetVoiceDetails(&details);
@@ -88,7 +92,7 @@ void XAudio2SourceVoiceProxy::GetVoiceDetails(XAUDIO2_VOICE_DETAILS *pVoiceDetai
 
 HRESULT XAudio2SourceVoiceProxy::SetOutputVoices(const XAUDIO2_VOICE_SENDS *pSendList)
 {
-	std::stringstream ss;
+	std::wstringstream ss;
 	ss << "XAudio2SourceVoiceProxy::SetOutputVoices " << this << " ";
 	print_sends(ss, pSendList);
 	logger::log(ss.str());
@@ -106,7 +110,25 @@ HRESULT XAudio2SourceVoiceProxy::SetOutputVoices(const XAUDIO2_VOICE_SENDS *pSen
 
 HRESULT XAudio2SourceVoiceProxy::SetEffectChain(const XAUDIO2_EFFECT_CHAIN *pEffectChain)
 {
-	logger::log("XAudio2SourceVoiceProxy::SetEffectChain", " ", this, " pEffectChain=", pEffectChain, (pEffectChain != nullptr ? " count=" + std::to_string(pEffectChain->EffectCount) : " none"));
+	m_has_effect = pEffectChain != nullptr;
+	std::wstringstream ss;
+	if (pEffectChain)
+	{
+		ss << "[";
+		for (INT32 i = 0; i < pEffectChain->EffectCount; i++)
+		{
+			IXAPO * effect;
+			pEffectChain->pEffectDescriptors[i].pEffect->QueryInterface(&effect);
+			XAPO_REGISTRATION_PROPERTIES * props;
+			effect->GetRegistrationProperties(&props);
+			ss << props->FriendlyName;
+			if (i < pEffectChain->EffectCount - 1)
+				ss << ", ";
+			XAPOFree(props);
+		}
+		ss << "]";
+	}
+	logger::log("XAudio2SourceVoiceProxy::SetEffectChain", " ", this, " pEffectChain=", pEffectChain, (pEffectChain != nullptr ? L" count=" + std::to_wstring(pEffectChain->EffectCount) : L" none"), " ", ss.str());
 	return m_original->SetEffectChain(pEffectChain);
 }
 
@@ -177,8 +199,29 @@ void XAudio2SourceVoiceProxy::GetChannelVolumes(UINT32 Channels, float *pVolumes
 
 HRESULT XAudio2SourceVoiceProxy::SetOutputMatrix(IXAudio2Voice *pDestinationVoice, UINT32 SourceChannels, UINT32 DestinationChannels, const float *pLevelMatrix, UINT32 OperationSet)
 {
+	if (m_has_effect)
+	{
+		logger::log("XAudio2SourceVoiceProxy::SetOutputMatrix ", this, " has effect");
+	}
+
 	if (DestinationChannels == 2 && std::isnan(pLevelMatrix[0]))
 	{
+		/*if (!m_has_hrtf_effect)
+		{
+			m_has_hrtf_effect = true;
+			auto hrtfEffect = HrtfXapoEffect::CreateInstance();
+
+			XAUDIO2_EFFECT_DESCRIPTOR apoDesc[1] = { 0 };
+			apoDesc[0].InitialState = true;
+			apoDesc[0].OutputChannels = 2;
+			apoDesc[0].pEffect = static_cast<IXAPO*>(hrtfEffect);
+
+			XAUDIO2_EFFECT_CHAIN chain = { 0 };
+			chain.EffectCount = sizeof(apoDesc) / sizeof(apoDesc[0]);
+			chain.pEffectDescriptors = apoDesc;
+			m_original->SetEffectChain(&chain);
+		}*/
+
 		auto & id = *reinterpret_cast<const sound_id*>(&pLevelMatrix[1]);
 		auto sound3d = m_sound3d_registry->GetEntry(id);
 
@@ -203,7 +246,7 @@ void XAudio2SourceVoiceProxy::GetOutputMatrix(IXAudio2Voice *pDestinationVoice, 
 
 void XAudio2SourceVoiceProxy::DestroyVoice()
 {
-	std::stringstream ss;
+	std::wstringstream ss;
 	ss << "XAudio2SourceVoiceProxy::DestroyVoice " << this;
 	logger::log(ss.str());
 	m_on_destroy(this);
