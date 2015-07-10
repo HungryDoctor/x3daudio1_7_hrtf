@@ -70,7 +70,7 @@ STDMETHODIMP XAudio2Proxy::GetDeviceDetails(UINT32 Index, XAUDIO2_DEVICE_DETAILS
 STDMETHODIMP XAudio2Proxy::Initialize(UINT32 Flags, XAUDIO2_PROCESSOR XAudio2Processor)
 {
 	logger::log("Initializing XAudio2Proxy");
-	HRESULT result = m_original->Initialize(Flags, XAudio2Processor);
+	HRESULT result = m_original->Initialize(Flags | XAUDIO2_DEBUG_ENGINE, XAudio2Processor);
 	logger::log(L"(Not)constructed XAudio2Proxy with result " + std::to_wstring(result));
 	return result;
 }
@@ -99,11 +99,11 @@ STDMETHODIMP XAudio2Proxy::CreateSourceVoice(IXAudio2SourceVoice ** ppSourceVoic
 
 	IXAudio2SourceVoice * original_voice = NULL;
 	HRESULT result;
-	if (SUCCEEDED(result = m_original->CreateSourceVoice(&original_voice, pSourceFormat, Flags, MaxFrequencyRatio, pCallback, pSendList ? &originalSendList : 0, pEffectChain)))
+	if (SUCCEEDED(result = m_original->CreateSourceVoice(&original_voice, pSourceFormat, Flags, MaxFrequencyRatio, pCallback, pSendList ? &originalSendList : 0, nullptr)))
 	{
 		try
 		{
-			*ppSourceVoice = new XAudio2SourceVoiceProxy(m_sound3d_registry, *m_voice_mapper, original_voice, [&](auto voice)
+			*ppSourceVoice = new XAudio2SourceVoiceProxy(m_sound3d_registry, *m_voice_mapper, original_voice, pSourceFormat->nChannels, pEffectChain, [&](auto voice)
 				{
 					m_voice_mapper->ForgetMapByProxy(voice);
 					delete voice;
@@ -137,11 +137,11 @@ STDMETHODIMP XAudio2Proxy::CreateSubmixVoice(IXAudio2SubmixVoice ** ppSubmixVoic
 
 	IXAudio2SubmixVoice * original_voice = NULL;
 	HRESULT result;
-	if (SUCCEEDED(result = m_original->CreateSubmixVoice(&original_voice, InputChannels, InputSampleRate, Flags, ProcessingStage, pSendList ? &originalSendList : 0, pEffectChain)))
+	if (SUCCEEDED(result = m_original->CreateSubmixVoice(&original_voice, InputChannels, InputSampleRate, Flags, ProcessingStage, pSendList ? &originalSendList : 0, nullptr)))
 	{
 		try
 		{
-			*ppSubmixVoice = new XAudio2SubmixVoiceProxy(m_sound3d_registry, *m_voice_mapper, original_voice, [&](auto voice)
+			*ppSubmixVoice = new XAudio2SubmixVoiceProxy(m_sound3d_registry, *m_voice_mapper, original_voice, InputChannels, pEffectChain, [&](auto voice)
 				{
 					m_voice_mapper->ForgetMapByProxy(voice);
 					delete voice;

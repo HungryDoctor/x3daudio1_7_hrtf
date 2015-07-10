@@ -7,7 +7,8 @@
 
 struct HrtfXapoParam
 {
-
+	int payload;
+	int payload2;
 };
 
 
@@ -24,8 +25,12 @@ public:
 	STDMETHOD_(void, Process)(UINT32 InputProcessParameterCount, const XAPO_PROCESS_BUFFER_PARAMETERS * pInputProcessParameters, UINT32 OutputProcessParameterCount, XAPO_PROCESS_BUFFER_PARAMETERS * pOutputProcessParameters, BOOL IsEnabled) override;
 
 private:
+	static XAPO_REGISTRATION_PROPERTIES m_regProps;
+
 	WAVEFORMATEX m_input_format;
 	WAVEFORMATEX m_output_format;
 	HrtfXapoParam m_params[3]; // ring buffer as CXAPOParametersBase requires
-	static XAPO_REGISTRATION_PROPERTIES m_regProps;
+
+	int m_sample_counter;
+	float m_charge[2];
 };

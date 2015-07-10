@@ -1,5 +1,6 @@
 #pragma once
 
+#include "XAudio2VoiceProxy.h"
 #include <xaudio2.h>
 #include <memory>
 #include <functional>
@@ -13,7 +14,7 @@ public:
 	typedef std::function<void(XAudio2SubmixVoiceProxy*)> deleter;
 
 public:
-	XAudio2SubmixVoiceProxy(ISound3DRegistry * sound3d_registry, const IVoiceMapper & voice_mapper, IXAudio2SubmixVoice * original, const deleter & on_destroy);
+	XAudio2SubmixVoiceProxy(ISound3DRegistry * sound3d_registry, const IVoiceMapper & voice_mapper, IXAudio2SubmixVoice * original, UINT32 input_channels, const XAUDIO2_EFFECT_CHAIN * original_chain, const deleter & on_destroy);
 	virtual ~XAudio2SubmixVoiceProxy();
 
 public:
@@ -40,6 +41,7 @@ public:
 
 
 private:
+	XAudio2VoiceProxy m_impl;
 	IXAudio2SubmixVoice * m_original;
 	ISound3DRegistry * m_sound3d_registry;
 	const IVoiceMapper & m_voice_mapper;

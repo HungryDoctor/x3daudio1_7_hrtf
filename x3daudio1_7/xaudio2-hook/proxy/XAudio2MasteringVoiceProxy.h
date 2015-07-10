@@ -1,5 +1,6 @@
 #pragma once
 
+#include "XAudio2VoiceProxy.h"
 #include <xaudio2.h>
 #include "IVoiceMapper.h"
 #include <memory>
@@ -37,6 +38,7 @@ public:
 	STDMETHOD_(void, DestroyVoice)() override;
 
 private:
+	XAudio2VoiceProxy m_impl;
 	IXAudio2MasteringVoice * m_original;
 	const IVoiceMapper & m_voice_mapper;
 	deleter m_on_destroy;

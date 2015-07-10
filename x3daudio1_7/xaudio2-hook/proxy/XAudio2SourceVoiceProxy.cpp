@@ -9,6 +9,8 @@
 #include "util.h"
 #include "logger.h"
 
+//#define DUMP_SOUND_WAV
+
 std::wstring GetName(const XAudio2SourceVoiceProxy * ptr)
 {
 	std::wstringstream ss;
@@ -16,17 +18,18 @@ std::wstring GetName(const XAudio2SourceVoiceProxy * ptr)
 	return ss.str();
 }
 
-XAudio2SourceVoiceProxy::XAudio2SourceVoiceProxy(ISound3DRegistry * sound3d_registry, const IVoiceMapper & voice_mapper, IXAudio2SourceVoice * original, const deleter & on_destroy)
-	: m_sound3d_registry(sound3d_registry)
+XAudio2SourceVoiceProxy::XAudio2SourceVoiceProxy(ISound3DRegistry * sound3d_registry, const IVoiceMapper & voice_mapper, IXAudio2SourceVoice * original, UINT32 input_channels, const XAUDIO2_EFFECT_CHAIN * original_chain, const deleter & on_destroy)
+	: m_impl(L"XAudio2SourceVoiceProxy", sound3d_registry, voice_mapper, original, input_channels, this, original_chain)
+	, m_sound3d_registry(sound3d_registry)
 	, m_voice_mapper(voice_mapper)
 	, m_original(original)
 	, m_on_destroy(on_destroy)
-	, m_has_hrtf_effect(false)
-	, m_has_effect(false)
 {
+#ifdef DUMP_SOUND_WAV
 	XAUDIO2_VOICE_DETAILS details;
 	original->GetVoiceDetails(&details);
 	m_wave_file.reset(new WaveFile(std::wstring(L"wavs\\") + GetName(this) + L".wav", details.InputChannels, details.InputSampleRate, 16));
+#endif
 }
 
 XAudio2SourceVoiceProxy::~XAudio2SourceVoiceProxy()
@@ -46,7 +49,9 @@ HRESULT XAudio2SourceVoiceProxy::Stop(UINT32 Flags, UINT32 OperationSet)
 
 HRESULT XAudio2SourceVoiceProxy::SubmitSourceBuffer(const XAUDIO2_BUFFER * pBuffer, const XAUDIO2_BUFFER_WMA *pBufferWMA)
 {
+#ifdef DUMP_SOUND_WAV
 	m_wave_file->AppendData(pBuffer->pAudioData, pBuffer->AudioBytes);
+#endif
 	return m_original->SubmitSourceBuffer(pBuffer, pBufferWMA);
 }
 
@@ -85,163 +90,98 @@ HRESULT XAudio2SourceVoiceProxy::SetSourceSampleRate(UINT32 NewSourceSampleRate)
 	return m_original->SetSourceSampleRate(NewSourceSampleRate);
 }
 
+// End Source-specific
+
+// Common part
+
 void XAudio2SourceVoiceProxy::GetVoiceDetails(XAUDIO2_VOICE_DETAILS *pVoiceDetails)
 {
-	m_original->GetVoiceDetails(pVoiceDetails);
+	m_impl.GetVoiceDetails(pVoiceDetails);
 }
 
 HRESULT XAudio2SourceVoiceProxy::SetOutputVoices(const XAUDIO2_VOICE_SENDS *pSendList)
 {
-	std::wstringstream ss;
-	ss << "XAudio2SourceVoiceProxy::SetOutputVoices " << this << " ";
-	print_sends(ss, pSendList);
-	logger::log(ss.str());
-
-	XAUDIO2_VOICE_SENDS originalSendList = { 0 };
-	if (pSendList)
-		m_voice_mapper.MapSendsToOriginal(*pSendList, originalSendList);
-
-	auto result = m_original->SetOutputVoices(pSendList ? &originalSendList : 0);
-
-	m_voice_mapper.CleanupSends(originalSendList);
-
-	return result;
+	return m_impl.SetOutputVoices(pSendList );
 }
 
 HRESULT XAudio2SourceVoiceProxy::SetEffectChain(const XAUDIO2_EFFECT_CHAIN *pEffectChain)
 {
-	m_has_effect = pEffectChain != nullptr;
-	std::wstringstream ss;
-	if (pEffectChain)
-	{
-		ss << "[";
-		for (INT32 i = 0; i < pEffectChain->EffectCount; i++)
-		{
-			IXAPO * effect;
-			pEffectChain->pEffectDescriptors[i].pEffect->QueryInterface(&effect);
-			XAPO_REGISTRATION_PROPERTIES * props;
-			effect->GetRegistrationProperties(&props);
-			ss << props->FriendlyName;
-			if (i < pEffectChain->EffectCount - 1)
-				ss << ", ";
-			XAPOFree(props);
-		}
-		ss << "]";
-	}
-	logger::log("XAudio2SourceVoiceProxy::SetEffectChain", " ", this, " pEffectChain=", pEffectChain, (pEffectChain != nullptr ? L" count=" + std::to_wstring(pEffectChain->EffectCount) : L" none"), " ", ss.str());
-	return m_original->SetEffectChain(pEffectChain);
+	return m_impl.SetEffectChain(pEffectChain);
 }
 
 HRESULT XAudio2SourceVoiceProxy::EnableEffect(UINT32 EffectIndex, UINT32 OperationSet)
 {
-	return m_original->EnableEffect(EffectIndex, OperationSet);
+	return m_impl.EnableEffect(EffectIndex, OperationSet);
 }
 
 HRESULT XAudio2SourceVoiceProxy::DisableEffect(UINT32 EffectIndex, UINT32 OperationSet)
 {
-	return m_original->DisableEffect(EffectIndex, OperationSet);
+	return m_impl.DisableEffect(EffectIndex, OperationSet);
 }
 
 void XAudio2SourceVoiceProxy::GetEffectState(UINT32 EffectIndex, BOOL *pEnabled)
 {
-	m_original->GetEffectState(EffectIndex, pEnabled);
+	m_impl.GetEffectState(EffectIndex, pEnabled);
 }
 
 HRESULT XAudio2SourceVoiceProxy::SetEffectParameters(UINT32 EffectIndex, const void *pParameters, UINT32 ParametersByteSize, UINT32 OperationSet)
 {
-	return m_original->SetEffectParameters(EffectIndex, pParameters, ParametersByteSize, OperationSet);
+	return m_impl.SetEffectParameters(EffectIndex, pParameters, ParametersByteSize, OperationSet);
 }
 
 HRESULT XAudio2SourceVoiceProxy::GetEffectParameters(UINT32 EffectIndex, void *pParameters, UINT32 ParametersByteSize)
 {
-	return m_original->GetEffectParameters(EffectIndex, pParameters, ParametersByteSize);
+	return m_impl.GetEffectParameters(EffectIndex, pParameters, ParametersByteSize);
 }
 
 HRESULT XAudio2SourceVoiceProxy::SetFilterParameters(const XAUDIO2_FILTER_PARAMETERS *pParameters, UINT32 OperationSet)
 {
-	return m_original->SetFilterParameters(pParameters, OperationSet);
+	return m_impl.SetFilterParameters(pParameters, OperationSet);
 }
 
 void XAudio2SourceVoiceProxy::GetFilterParameters(XAUDIO2_FILTER_PARAMETERS *pParameters)
 {
-	m_original->GetFilterParameters(pParameters);
+	m_impl.GetFilterParameters(pParameters);
 }
 
 HRESULT XAudio2SourceVoiceProxy::SetOutputFilterParameters(IXAudio2Voice *pDestinationVoice, const XAUDIO2_FILTER_PARAMETERS *pParameters, UINT32 OperationSet)
 {
-	return m_original->SetOutputFilterParameters(m_voice_mapper.MapVoiceToOriginal(pDestinationVoice), pParameters, OperationSet);
+	return m_impl.SetOutputFilterParameters(m_voice_mapper.MapVoiceToOriginal(pDestinationVoice), pParameters, OperationSet);
 }
 
 void XAudio2SourceVoiceProxy::GetOutputFilterParameters(IXAudio2Voice *pDestinationVoice, XAUDIO2_FILTER_PARAMETERS *pParameters)
 {
-	m_original->GetOutputFilterParameters(m_voice_mapper.MapVoiceToOriginal(pDestinationVoice), pParameters);
+	m_impl.GetOutputFilterParameters(m_voice_mapper.MapVoiceToOriginal(pDestinationVoice), pParameters);
 }
 
 HRESULT XAudio2SourceVoiceProxy::SetVolume(float Volume, UINT32 OperationSet)
 {
-	return m_original->SetVolume(Volume, OperationSet);
+	return m_impl.SetVolume(Volume, OperationSet);
 }
 
 void XAudio2SourceVoiceProxy::GetVolume(float *pVolume)
 {
-	m_original->GetVolume(pVolume);
+	m_impl.GetVolume(pVolume);
 }
 
 HRESULT XAudio2SourceVoiceProxy::SetChannelVolumes(UINT32 Channels, const float *pVolumes, UINT32 OperationSet)
 {
-	return m_original->SetChannelVolumes(Channels, pVolumes, OperationSet);
+	return m_impl.SetChannelVolumes(Channels, pVolumes, OperationSet);
 }
 
 void XAudio2SourceVoiceProxy::GetChannelVolumes(UINT32 Channels, float *pVolumes)
 {
-	m_original->GetChannelVolumes(Channels, pVolumes);
+	m_impl.GetChannelVolumes(Channels, pVolumes);
 }
 
 HRESULT XAudio2SourceVoiceProxy::SetOutputMatrix(IXAudio2Voice *pDestinationVoice, UINT32 SourceChannels, UINT32 DestinationChannels, const float *pLevelMatrix, UINT32 OperationSet)
 {
-	if (m_has_effect)
-	{
-		logger::log("XAudio2SourceVoiceProxy::SetOutputMatrix ", this, " has effect");
-	}
-
-	if (DestinationChannels == 2 && std::isnan(pLevelMatrix[0]))
-	{
-		/*if (!m_has_hrtf_effect)
-		{
-			m_has_hrtf_effect = true;
-			auto hrtfEffect = HrtfXapoEffect::CreateInstance();
-
-			XAUDIO2_EFFECT_DESCRIPTOR apoDesc[1] = { 0 };
-			apoDesc[0].InitialState = true;
-			apoDesc[0].OutputChannels = 2;
-			apoDesc[0].pEffect = static_cast<IXAPO*>(hrtfEffect);
-
-			XAUDIO2_EFFECT_CHAIN chain = { 0 };
-			chain.EffectCount = sizeof(apoDesc) / sizeof(apoDesc[0]);
-			chain.pEffectDescriptors = apoDesc;
-			m_original->SetEffectChain(&chain);
-		}*/
-
-		auto & id = *reinterpret_cast<const sound_id*>(&pLevelMatrix[1]);
-		auto sound3d = m_sound3d_registry->GetEntry(id);
-
-		float matrix[XAUDIO2_MAX_AUDIO_CHANNELS * 2]; // we only support two output channels
-		for (UINT32 i = 0; i < SourceChannels; i++)
-		{
-			matrix[i * 2 + 0] = sound3d.matrix_coefficients[0];
-			matrix[i * 2 + 1] = -sound3d.matrix_coefficients[1];
-		}
-		return m_original->SetOutputMatrix(m_voice_mapper.MapVoiceToOriginal(pDestinationVoice), SourceChannels, DestinationChannels, matrix, OperationSet);
-	}
-	else
-	{
-		return m_original->SetOutputMatrix(m_voice_mapper.MapVoiceToOriginal(pDestinationVoice), SourceChannels, DestinationChannels, pLevelMatrix, OperationSet);
-	}
+	return m_impl.SetOutputMatrix(m_voice_mapper.MapVoiceToOriginal(pDestinationVoice), SourceChannels, DestinationChannels, pLevelMatrix, OperationSet);
 }
 
 void XAudio2SourceVoiceProxy::GetOutputMatrix(IXAudio2Voice *pDestinationVoice, UINT32 SourceChannels, UINT32 DestinationChannels, float *pLevelMatrix)
 {
-	m_original->GetOutputMatrix(m_voice_mapper.MapVoiceToOriginal(pDestinationVoice), SourceChannels, DestinationChannels, pLevelMatrix);
+	m_impl.GetOutputMatrix(m_voice_mapper.MapVoiceToOriginal(pDestinationVoice), SourceChannels, DestinationChannels, pLevelMatrix);
 }
 
 void XAudio2SourceVoiceProxy::DestroyVoice()

@@ -62,7 +62,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>xapobased.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>xapobased.lib;xapofx.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -80,7 +80,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>xapobased.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>xapobased.lib;xapofx.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -97,6 +97,7 @@
     <ClInclude Include="targetver.h" />
     <ClInclude Include="wave\WaveFile.h" />
     <ClInclude Include="x3daudio-hook\X3DAudioProxy.h" />
+    <ClInclude Include="xaudio2-hook\proxy\AlteredEffectChain.h" />
     <ClInclude Include="xaudio2-hook\proxy\VoiceMapper.h" />
     <ClInclude Include="x3daudio-hook\x3daudio_hook.h" />
     <ClInclude Include="xaudio2-hook\creation_hook.h" />
@@ -108,6 +109,7 @@
     <ClInclude Include="xaudio2-hook\proxy\XAudio2ProxyFactory.h" />
     <ClInclude Include="xaudio2-hook\proxy\XAudio2SourceVoiceProxy.h" />
     <ClInclude Include="xaudio2-hook\proxy\XAudio2SubmixVoiceProxy.h" />
+    <ClInclude Include="xaudio2-hook\proxy\XAudio2VoiceProxy.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="disasm\cpu.c">
@@ -152,6 +154,7 @@
     <ClCompile Include="xaudio2-hook\proxy\XAudio2ProxyFactory.cpp" />
     <ClCompile Include="xaudio2-hook\proxy\XAudio2SourceVoiceProxy.cpp" />
     <ClCompile Include="xaudio2-hook\proxy\XAudio2SubmixVoiceProxy.cpp" />
+    <ClCompile Include="xaudio2-hook\proxy\XAudio2VoiceProxy.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

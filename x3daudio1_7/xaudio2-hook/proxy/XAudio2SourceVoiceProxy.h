@@ -1,5 +1,6 @@
 #pragma once
 
+#include "XAudio2VoiceProxy.h"
 #include <xaudio2.h>
 #include <memory>
 #include <functional>
@@ -15,7 +16,7 @@ public:
 	typedef std::function<void(XAudio2SourceVoiceProxy*)> deleter;
 
 public:
-	XAudio2SourceVoiceProxy(ISound3DRegistry * sound3d_registry, const IVoiceMapper & voice_mapper, IXAudio2SourceVoice * original, const deleter & on_destroy);
+	XAudio2SourceVoiceProxy(ISound3DRegistry * sound3d_registry, const IVoiceMapper & voice_mapper, IXAudio2SourceVoice * original, UINT32 input_channels, const XAUDIO2_EFFECT_CHAIN * original_chain, const deleter & on_destroy);
 	virtual ~XAudio2SourceVoiceProxy();
 
 public:
@@ -51,13 +52,13 @@ public:
 	STDMETHOD_(void, DestroyVoice)() override;
 
 private:
+	XAudio2VoiceProxy m_impl;
 	IXAudio2SourceVoice * m_original;
 	ISound3DRegistry * m_sound3d_registry;
 	const IVoiceMapper & m_voice_mapper;
 	deleter m_on_destroy;
+
 	std::unique_ptr<WaveFile> m_wave_file;
-	bool m_has_hrtf_effect;
-	bool m_has_effect;
 
 	XAudio2SourceVoiceProxy(const XAudio2SourceVoiceProxy &) = delete;
 	XAudio2SourceVoiceProxy & operator=(const XAudio2SourceVoiceProxy &) = delete;

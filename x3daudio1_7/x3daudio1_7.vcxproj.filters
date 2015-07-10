@@ -87,6 +87,12 @@
     <ClInclude Include="xaudio2-hook\proxy\XAPO\HrtfEffect.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="xaudio2-hook\proxy\XAudio2VoiceProxy.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="xaudio2-hook\proxy\AlteredEffectChain.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -147,6 +153,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="xaudio2-hook\proxy\XAPO\HrtfEffect.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="xaudio2-hook\proxy\XAudio2VoiceProxy.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

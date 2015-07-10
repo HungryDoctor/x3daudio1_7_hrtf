@@ -18,7 +18,7 @@ X3DAudioProxy::~X3DAudioProxy()
 
 void X3DAudioProxy::X3DAudioCalculate(const X3DAUDIO_LISTENER * pListener, const X3DAUDIO_EMITTER * pEmitter, UINT32 Flags, X3DAUDIO_DSP_SETTINGS * pDSPSettings)
 {
-	logger::log("X3DAudioProxy::X3DAudioCalculate");
+	//logger::log("X3DAudioProxy::X3DAudioCalculate");
 	
 	m_original.X3DAudioCalculate(m_handle, pListener, pEmitter, Flags, pDSPSettings);
 
