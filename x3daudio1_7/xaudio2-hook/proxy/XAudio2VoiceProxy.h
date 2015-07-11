@@ -46,6 +46,7 @@ private:
 	const UINT32 m_input_channels;
 	int m_output_channels;
 	UINT32 m_hrtf_effect_index;
+	const bool m_is_master;
 
 
 	XAudio2VoiceProxy(const XAudio2VoiceProxy &) = delete;

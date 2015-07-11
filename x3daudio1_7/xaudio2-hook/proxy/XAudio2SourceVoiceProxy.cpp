@@ -20,15 +20,15 @@ std::wstring GetName(const XAudio2SourceVoiceProxy * ptr)
 
 XAudio2SourceVoiceProxy::XAudio2SourceVoiceProxy(ISound3DRegistry * sound3d_registry, const IVoiceMapper & voice_mapper, IXAudio2SourceVoice * original, UINT32 input_channels, const XAUDIO2_EFFECT_CHAIN * original_chain, const deleter & on_destroy)
 	: m_impl(L"XAudio2SourceVoiceProxy", sound3d_registry, voice_mapper, original, input_channels, this, original_chain)
+	, m_original(original)
 	, m_sound3d_registry(sound3d_registry)
 	, m_voice_mapper(voice_mapper)
-	, m_original(original)
 	, m_on_destroy(on_destroy)
 {
 #ifdef DUMP_SOUND_WAV
 	XAUDIO2_VOICE_DETAILS details;
 	original->GetVoiceDetails(&details);
-	m_wave_file.reset(new WaveFile(std::wstring(L"wavs\\") + GetName(this) + L".wav", details.InputChannels, details.InputSampleRate, 16));
+	m_wave_file.reset(new WaveFile(std::wstring(L"wavs\\") + std::to_wstring(input_channels) + L"_"  + GetName(this) + L".wav", details.InputChannels, details.InputSampleRate, 16));
 #endif
 }
 

@@ -41,8 +41,8 @@ struct FunctionInfo
 
 FunctionInfo g_Functions[] =
 {
-	{"ole32.dll", "CoCreateInstance", (void**)&Original::CoCreateInstance, (void*)Hook::CoCreateInstance},
-	{"ole32.dll", "CoGetClassObject", (void**)&Original::CoGetClassObject, (void*)Hook::CoGetClassObject}
+	{"ole32.dll", "CoCreateInstance", reinterpret_cast<void**>(&Original::CoCreateInstance), static_cast<void*>(Hook::CoCreateInstance)},
+	{"ole32.dll", "CoGetClassObject", reinterpret_cast<void**>(&Original::CoGetClassObject), static_cast<void*>(Hook::CoGetClassObject)}
 };
 
 const size_t g_FunctionsCount = sizeof(g_Functions) / sizeof(FunctionInfo);
@@ -57,7 +57,7 @@ HRESULT WINAPI Hook::CoCreateInstance(REFCLSID rclsid, LPUNKNOWN pUnkOuter, DWOR
 			return CLASS_E_NOAGGREGATION;
 
 		ATL::CComPtr<IUnknown> originalObject;
-		HRESULT hr = Original::CoCreateInstance(rclsid, pUnkOuter, dwClsContext, riid, (void**)&originalObject);
+		HRESULT hr = Original::CoCreateInstance(__uuidof(XAudio2_Debug), pUnkOuter, dwClsContext, riid, reinterpret_cast<void**>(&originalObject));
 		if (FAILED(hr))
 			return hr;
 
@@ -72,7 +72,7 @@ HRESULT WINAPI Hook::CoGetClassObject(REFCLSID rclsid, DWORD dwClsContext, COSER
 	if (riid == IID_IClassFactory)
 	{
 		ATL::CComPtr<IClassFactory> originalFactory;
-		HRESULT hr = Original::CoGetClassObject(rclsid, dwClsContext, pServerInfo, riid, (void**)&originalFactory);
+		HRESULT hr = Original::CoGetClassObject(__uuidof(XAudio2_Debug), dwClsContext, pServerInfo, riid, reinterpret_cast<void**>(&originalFactory));
 		if (FAILED(hr))
 			return hr;
 

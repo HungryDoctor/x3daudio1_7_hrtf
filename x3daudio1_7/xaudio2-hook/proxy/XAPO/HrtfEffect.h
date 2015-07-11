@@ -25,6 +25,10 @@ public:
 	STDMETHOD_(void, Process)(UINT32 InputProcessParameterCount, const XAPO_PROCESS_BUFFER_PARAMETERS * pInputProcessParameters, UINT32 OutputProcessParameterCount, XAPO_PROCESS_BUFFER_PARAMETERS * pOutputProcessParameters, BOOL IsEnabled) override;
 
 private:
+	bool is_charged() const;
+	void process_valid_buffer(const float* pInput, float* pOutput, const UINT32 frame_count);
+	void process_invalid_buffer(float* pOutput, const UINT32 frames_to_write_count, UINT32& valid_frames_counter);
+	void bypass(const float* pInput, float* pOutput, const UINT32 frame_count, const bool is_valid);
 	static XAPO_REGISTRATION_PROPERTIES m_regProps;
 
 	WAVEFORMATEX m_input_format;
@@ -33,4 +37,7 @@ private:
 
 	int m_sample_counter;
 	float m_charge[2];
+
+	const float left_param = 10000.0f;
+	const float right_param = 10000.0f;
 };
