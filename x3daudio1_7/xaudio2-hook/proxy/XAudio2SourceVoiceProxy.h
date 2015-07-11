@@ -16,7 +16,8 @@ public:
 	typedef std::function<void(XAudio2SourceVoiceProxy*)> deleter;
 
 public:
-	XAudio2SourceVoiceProxy(ISound3DRegistry * sound3d_registry, const IVoiceMapper & voice_mapper, IXAudio2SourceVoice * original, UINT32 input_channels, const XAUDIO2_EFFECT_CHAIN * original_chain, const deleter & on_destroy);
+	XAudio2SourceVoiceProxy(IXAudio2 * original_xaudio, ISound3DRegistry * sound3d_registry, IVoiceMapper * voice_mapper, const deleter & on_destroy,
+		const WAVEFORMATEX * pSourceFormat, UINT32 Flags, float MaxFrequencyRatio, IXAudio2VoiceCallback *pCallback, const XAUDIO2_VOICE_SENDS *pSendList, const XAUDIO2_EFFECT_CHAIN *pEffectChain);
 	virtual ~XAudio2SourceVoiceProxy();
 
 public:
@@ -52,10 +53,10 @@ public:
 	STDMETHOD_(void, DestroyVoice)() override;
 
 private:
-	XAudio2VoiceProxy m_impl;
+	std::unique_ptr<XAudio2VoiceProxy> m_impl;
 	IXAudio2SourceVoice * m_original;
 	ISound3DRegistry * m_sound3d_registry;
-	const IVoiceMapper & m_voice_mapper;
+	IVoiceMapper * m_voice_mapper;
 	deleter m_on_destroy;
 
 	std::unique_ptr<WaveFile> m_wave_file;

@@ -9,9 +9,9 @@
 #include "logger.h"
 #include <cmath>
 
-XAudio2VoiceProxy::XAudio2VoiceProxy(const std::wstring & type_name, ISound3DRegistry * sound3d_registry, const IVoiceMapper & voice_mapper, IXAudio2Voice * original, const void * id)
+XAudio2VoiceProxy::XAudio2VoiceProxy(const std::wstring & type_name, const IVoiceMapper * voice_mapper, IXAudio2Voice * original, const void * id)
 	: m_type_name(type_name)
-	, m_sound3d_registry(sound3d_registry)
+	, m_sound3d_registry(nullptr)
 	, m_voice_mapper(voice_mapper)
 	, m_original(original)
 	, m_input_channels(0)
@@ -22,7 +22,7 @@ XAudio2VoiceProxy::XAudio2VoiceProxy(const std::wstring & type_name, ISound3DReg
 
 }
 
-XAudio2VoiceProxy::XAudio2VoiceProxy(const std::wstring & type_name, ISound3DRegistry * sound3d_registry, const IVoiceMapper & voice_mapper, IXAudio2Voice * original, UINT32 input_channels, const void * id, const XAUDIO2_EFFECT_CHAIN * original_chain)
+XAudio2VoiceProxy::XAudio2VoiceProxy(const std::wstring & type_name, ISound3DRegistry * sound3d_registry, const IVoiceMapper * voice_mapper, IXAudio2Voice * original, UINT32 input_channels, const void * id)
 	: m_type_name(type_name)
 	, m_sound3d_registry(sound3d_registry)
 	, m_voice_mapper(voice_mapper)
@@ -32,7 +32,7 @@ XAudio2VoiceProxy::XAudio2VoiceProxy(const std::wstring & type_name, ISound3DReg
 	, m_hrtf_effect_index(UINT_MAX)
 	, m_is_master(false)
 {
-	AlterAndSetEffectChain(original_chain);
+	//AlterAndSetEffectChain(original_chain);
 }
 
 void XAudio2VoiceProxy::GetVoiceDetails(XAUDIO2_VOICE_DETAILS *pVoiceDetails)
@@ -49,35 +49,19 @@ HRESULT XAudio2VoiceProxy::SetOutputVoices(const XAUDIO2_VOICE_SENDS *pSendList)
 
 	XAUDIO2_VOICE_SENDS originalSendList = { 0 };
 	if (pSendList)
-		m_voice_mapper.MapSendsToOriginal(*pSendList, originalSendList);
+		m_voice_mapper->MapSendsToOriginal(*pSendList, originalSendList);
 
 	auto result = m_original->SetOutputVoices(pSendList ? &originalSendList : 0);
 
-	m_voice_mapper.CleanupSends(originalSendList);
-
-	if (pSendList->SendCount == 1)
-	{
-		float volumes[2];
-		m_original->GetChannelVolumes(2, volumes);
-
-		float matrix[2 * 2];
-		m_original->GetOutputMatrix(m_voice_mapper.MapVoiceToOriginal(pSendList->pSends[0].pOutputVoice), 2, 2, matrix);
-
-		logger::log("Volumes: ", volumes[0], " ", volumes[1], " Matrix is ", matrix[0], " ", matrix[1], " ", matrix[2], " ", matrix[3]);
-	}
-
-	//if (pSendList->SendCount == 1)
-	//{
-	//	float volumes[] = { 1, 1 };
-	//	m_original->SetChannelVolumes(2, volumes);
-	//}
+	m_voice_mapper->CleanupSends(originalSendList);
 
 	return result;
 }
 
 HRESULT XAudio2VoiceProxy::SetEffectChain(const XAUDIO2_EFFECT_CHAIN *pEffectChain)
 {
-	return AlterAndSetEffectChain(pEffectChain);
+	return m_original->SetEffectChain(pEffectChain);
+	//return AlterAndSetEffectChain(pEffectChain);
 }
 
 HRESULT XAudio2VoiceProxy::EnableEffect(UINT32 EffectIndex, UINT32 OperationSet)
@@ -117,12 +101,12 @@ void XAudio2VoiceProxy::GetFilterParameters(XAUDIO2_FILTER_PARAMETERS *pParamete
 
 HRESULT XAudio2VoiceProxy::SetOutputFilterParameters(IXAudio2Voice *pDestinationVoice, const XAUDIO2_FILTER_PARAMETERS *pParameters, UINT32 OperationSet)
 {
-	return m_original->SetOutputFilterParameters(m_voice_mapper.MapVoiceToOriginal(pDestinationVoice), pParameters, OperationSet);
+	return m_original->SetOutputFilterParameters(m_voice_mapper->MapVoiceToOriginal(pDestinationVoice), pParameters, OperationSet);
 }
 
 void XAudio2VoiceProxy::GetOutputFilterParameters(IXAudio2Voice *pDestinationVoice, XAUDIO2_FILTER_PARAMETERS *pParameters)
 {
-	m_original->GetOutputFilterParameters(m_voice_mapper.MapVoiceToOriginal(pDestinationVoice), pParameters);
+	m_original->GetOutputFilterParameters(m_voice_mapper->MapVoiceToOriginal(pDestinationVoice), pParameters);
 }
 
 HRESULT XAudio2VoiceProxy::SetVolume(float Volume, UINT32 OperationSet)
@@ -148,6 +132,8 @@ void XAudio2VoiceProxy::GetChannelVolumes(UINT32 Channels, float *pVolumes)
 
 HRESULT XAudio2VoiceProxy::SetOutputMatrix(IXAudio2Voice *pDestinationVoice, UINT32 SourceChannels, UINT32 DestinationChannels, const float *pLevelMatrix, UINT32 OperationSet)
 {
+	return m_original->SetOutputMatrix(m_voice_mapper->MapVoiceToOriginal(pDestinationVoice), SourceChannels, DestinationChannels, pLevelMatrix);
+
 	logger::log("SetOutputMatrix pLevelMatrix[0]=", pLevelMatrix[0]);
 
 	if (std::isnan(pLevelMatrix[0]))
@@ -170,7 +156,7 @@ HRESULT XAudio2VoiceProxy::SetOutputMatrix(IXAudio2Voice *pDestinationVoice, UIN
 		//auto sound3d = m_sound3d_registry->GetEntry(id);
 
 		float matrix[] = { 0.01f, 0.01f, 0.01f, 0.01f };
-		return m_original->SetOutputMatrix(m_voice_mapper.MapVoiceToOriginal(pDestinationVoice), 2, 2, matrix, OperationSet);
+		return m_original->SetOutputMatrix(m_voice_mapper->MapVoiceToOriginal(pDestinationVoice), 2, 2, matrix, OperationSet);
 	}
 	else
 	{
@@ -185,11 +171,11 @@ HRESULT XAudio2VoiceProxy::SetOutputMatrix(IXAudio2Voice *pDestinationVoice, UIN
 			{
 				matrix[i * 2] = matrix[i * 2 + 1] = pLevelMatrix[i];
 			}
-			return m_original->SetOutputMatrix(m_voice_mapper.MapVoiceToOriginal(pDestinationVoice), 2, DestinationChannels, matrix, OperationSet);
+			return m_original->SetOutputMatrix(m_voice_mapper->MapVoiceToOriginal(pDestinationVoice), 2, DestinationChannels, matrix, OperationSet);
 		}
 		else if (SourceChannels == 2)
 		{
-			return m_original->SetOutputMatrix(m_voice_mapper.MapVoiceToOriginal(pDestinationVoice), 2, DestinationChannels, pLevelMatrix, OperationSet);
+			return m_original->SetOutputMatrix(m_voice_mapper->MapVoiceToOriginal(pDestinationVoice), 2, DestinationChannels, pLevelMatrix, OperationSet);
 		}
 		else
 		{
@@ -202,7 +188,7 @@ HRESULT XAudio2VoiceProxy::SetOutputMatrix(IXAudio2Voice *pDestinationVoice, UIN
 
 void XAudio2VoiceProxy::GetOutputMatrix(IXAudio2Voice *pDestinationVoice, UINT32 SourceChannels, UINT32 DestinationChannels, float *pLevelMatrix)
 {
-	m_original->GetOutputMatrix(m_voice_mapper.MapVoiceToOriginal(pDestinationVoice), SourceChannels, DestinationChannels, pLevelMatrix);
+	m_original->GetOutputMatrix(m_voice_mapper->MapVoiceToOriginal(pDestinationVoice), SourceChannels, DestinationChannels, pLevelMatrix);
 }
 
 HRESULT XAudio2VoiceProxy::AlterAndSetEffectChain(const XAUDIO2_EFFECT_CHAIN * original_chain)

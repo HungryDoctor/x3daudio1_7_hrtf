@@ -35,7 +35,7 @@ void VoiceMapper::ForgetMapByProxy(IXAudio2Voice * proxy)
 void VoiceMapper::MapSendsToOriginal(const XAUDIO2_VOICE_SENDS & proxy_sends, XAUDIO2_VOICE_SENDS & original_sends) const
 {
 	original_sends.SendCount = proxy_sends.SendCount;
-	original_sends.pSends = new XAUDIO2_SEND_DESCRIPTOR[proxy_sends.SendCount];
+	original_sends.pSends = proxy_sends.SendCount > 0 ? new XAUDIO2_SEND_DESCRIPTOR[proxy_sends.SendCount] : nullptr;
 
 	for (UINT32 i = 0; i < proxy_sends.SendCount; i++)
 	{

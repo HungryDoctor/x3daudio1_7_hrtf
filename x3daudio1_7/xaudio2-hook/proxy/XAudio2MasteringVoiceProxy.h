@@ -12,7 +12,8 @@ public:
 	typedef std::function<void(XAudio2MasteringVoiceProxy*)> deleter;
 
 public:
-	XAudio2MasteringVoiceProxy(const IVoiceMapper & voice_mapper, IXAudio2MasteringVoice * original, const deleter & on_destroy);
+	XAudio2MasteringVoiceProxy(IXAudio2 * original_xaudio, IVoiceMapper * voice_mapper, const deleter & on_destroy,
+		UINT32 InputChannels, UINT32 InputSampleRate, UINT32 Flags, UINT32 DeviceIndex, const XAUDIO2_EFFECT_CHAIN *pEffectChain);
 	virtual ~XAudio2MasteringVoiceProxy();
 
 public:
@@ -38,9 +39,9 @@ public:
 	STDMETHOD_(void, DestroyVoice)() override;
 
 private:
-	XAudio2VoiceProxy m_impl;
+	std::unique_ptr<XAudio2VoiceProxy> m_impl;
 	IXAudio2MasteringVoice * m_original;
-	const IVoiceMapper & m_voice_mapper;
+	IVoiceMapper * m_voice_mapper;
 	deleter m_on_destroy;
 
 	XAudio2MasteringVoiceProxy(const XAudio2MasteringVoiceProxy &) = delete;

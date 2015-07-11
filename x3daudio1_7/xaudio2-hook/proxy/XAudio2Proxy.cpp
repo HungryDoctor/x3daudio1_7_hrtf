@@ -88,111 +88,69 @@ STDMETHODIMP_(void) XAudio2Proxy::UnregisterForCallbacks(IXAudio2EngineCallback 
 STDMETHODIMP XAudio2Proxy::CreateSourceVoice(IXAudio2SourceVoice ** ppSourceVoice, const WAVEFORMATEX * pSourceFormat, UINT32 Flags, float MaxFrequencyRatio,
 	IXAudio2VoiceCallback *pCallback, const XAUDIO2_VOICE_SENDS *pSendList, const XAUDIO2_EFFECT_CHAIN *pEffectChain)
 {
-	std::wstringstream ss;
-	ss << "XAudio2Proxy::CreateSourceVoice FormatChannels=" << pSourceFormat->nChannels << " FormatSampleRate=" << pSourceFormat->nSamplesPerSec << " MaxFrequencyRatio=" << MaxFrequencyRatio << " Effects=" << (pEffectChain ? std::to_wstring(pEffectChain->EffectCount) : L"nullptr") << " ";
-	print_sends(ss, pSendList);
-	logger::log(ss.str());
-
-	XAUDIO2_VOICE_SENDS originalSendList = { 0 };
-	if (pSendList)
-		m_voice_mapper->MapSendsToOriginal(*pSendList, originalSendList);
-
-	IXAudio2SourceVoice * original_voice = NULL;
-	HRESULT result;
-	if (SUCCEEDED(result = m_original->CreateSourceVoice(&original_voice, pSourceFormat, Flags, MaxFrequencyRatio, pCallback, pSendList ? &originalSendList : 0, nullptr)))
+	try
 	{
-		try
-		{
-			*ppSourceVoice = new XAudio2SourceVoiceProxy(m_sound3d_registry, *m_voice_mapper, original_voice, pSourceFormat->nChannels, pEffectChain, [&](auto voice)
-				{
-					m_voice_mapper->ForgetMapByProxy(voice);
-					delete voice;
-				});
-			m_voice_mapper->RememberMap(original_voice, *ppSourceVoice);
-			std::wstringstream ss;
-			ss << "XAudio2Proxy::CreateSourceVoice succeeded " << *ppSourceVoice;
-			logger::log(ss.str());
-		}
-		catch (std::bad_alloc&)
-		{
-			result = E_OUTOFMEMORY;
-		}
+		*ppSourceVoice = new XAudio2SourceVoiceProxy(
+			m_original.p,
+			m_sound3d_registry,
+			m_voice_mapper.get(),
+			[&](auto voice)
+			{
+				m_voice_mapper->ForgetMapByProxy(voice);
+				delete voice;
+			},
+			pSourceFormat, Flags, MaxFrequencyRatio, pCallback, pSendList, pEffectChain);
+		return S_OK;
 	}
-
-	m_voice_mapper->CleanupSends(originalSendList);
-
-	return result;
+	catch (std::bad_alloc&)
+	{
+		return E_OUTOFMEMORY;
+	}
 }
 
 STDMETHODIMP XAudio2Proxy::CreateSubmixVoice(IXAudio2SubmixVoice ** ppSubmixVoice, UINT32 InputChannels, UINT32 InputSampleRate, UINT32 Flags, UINT32 ProcessingStage, const XAUDIO2_VOICE_SENDS *pSendList, const XAUDIO2_EFFECT_CHAIN *pEffectChain)
 {
-	std::wstringstream ss;
-	ss << "XAudio2Proxy::CreateSubmixVoice InputChannels=" << InputChannels << " InputSampleRate=" << InputSampleRate << " ProcessingStage=" << ProcessingStage << " Effects=" << (pEffectChain ? std::to_wstring(pEffectChain->EffectCount) : L"nullptr") << " ";
-	print_sends(ss, pSendList);
-	logger::log(ss.str());
-
-	XAUDIO2_VOICE_SENDS originalSendList = { 0 };
-	if (pSendList)
-		m_voice_mapper->MapSendsToOriginal(*pSendList, originalSendList);
-
-	IXAudio2SubmixVoice * original_voice = NULL;
-	HRESULT result;
-	if (SUCCEEDED(result = m_original->CreateSubmixVoice(&original_voice, InputChannels, InputSampleRate, Flags, ProcessingStage, pSendList ? &originalSendList : 0, nullptr)))
+	try
 	{
-		try
-		{
-			*ppSubmixVoice = new XAudio2SubmixVoiceProxy(m_sound3d_registry, *m_voice_mapper, original_voice, InputChannels, pEffectChain, [&](auto voice)
-				{
-					m_voice_mapper->ForgetMapByProxy(voice);
-					delete voice;
-				});
-			m_voice_mapper->RememberMap(original_voice, *ppSubmixVoice);
-			std::wstringstream ss;
-			ss << "XAudio2Proxy::CreateSubmixVoice succeeded " << *ppSubmixVoice;
-			logger::log(ss.str());
-		}
-		catch (std::bad_alloc&)
-		{
-			result = E_OUTOFMEMORY;
-		}
+		*ppSubmixVoice = new XAudio2SubmixVoiceProxy(
+			m_original.p,
+			m_sound3d_registry,
+			m_voice_mapper.get(),
+			[&](auto voice)
+			{
+				m_voice_mapper->ForgetMapByProxy(voice);
+				delete voice;
+			},
+			InputChannels, InputSampleRate, Flags, ProcessingStage, pSendList, pEffectChain);
+		return S_OK;
 	}
-
-	m_voice_mapper->CleanupSends(originalSendList);
-
-	return result;
+	catch (std::bad_alloc&)
+	{
+		return E_OUTOFMEMORY;
+	}
 }
 
 STDMETHODIMP XAudio2Proxy::CreateMasteringVoice(IXAudio2MasteringVoice ** ppMasteringVoice, UINT32 InputChannels, UINT32 InputSampleRate, UINT32 Flags, UINT32 DeviceIndex, const XAUDIO2_EFFECT_CHAIN *pEffectChain)
 {
 	//return m_original->CreateMasteringVoice(ppMasteringVoice, InputChannels, InputSampleRate, Flags, DeviceIndex, pEffectChain);
 
-	std::wstringstream ss;
-	ss << "XAudio2Proxy::CreateMasteringVoice InputChannels=" << InputChannels << " InputSampleRate=" << InputSampleRate << " DeviceIndex=" << DeviceIndex << " Effects=" << (pEffectChain ? std::to_wstring(pEffectChain->EffectCount) : L"nullptr") << " ";
-	logger::log(ss.str());
-
-	IXAudio2MasteringVoice * original_voice = NULL;
-	HRESULT result;
-	if (SUCCEEDED(result = m_original->CreateMasteringVoice(&original_voice, InputChannels, InputSampleRate, Flags, DeviceIndex, pEffectChain)))
+	try
 	{
-		try
-		{
-			*ppMasteringVoice = new XAudio2MasteringVoiceProxy(*m_voice_mapper, original_voice, [&](auto voice)
-				{
-					m_voice_mapper->ForgetMapByProxy(voice);
-					delete voice;
-				});
-			m_voice_mapper->RememberMap(original_voice, *ppMasteringVoice);
-			std::wstringstream ss;
-			ss << "XAudio2Proxy::CreateMasteringVoice succeeded " << *ppMasteringVoice;
-			logger::log(ss.str());
-		}
-		catch (std::bad_alloc&)
-		{
-			result = E_OUTOFMEMORY;
-		}
+		*ppMasteringVoice = new XAudio2MasteringVoiceProxy(
+			m_original.p,
+			m_voice_mapper.get(),
+			[&](auto voice)
+			{
+				m_voice_mapper->ForgetMapByProxy(voice);
+				delete voice;
+			},
+			InputChannels, InputSampleRate, Flags, DeviceIndex, pEffectChain);
+		return S_OK;
 	}
-
-	return result;
+	catch (std::bad_alloc&)
+	{
+		return E_OUTOFMEMORY;
+	}
 }
 
 STDMETHODIMP XAudio2Proxy::StartEngine()

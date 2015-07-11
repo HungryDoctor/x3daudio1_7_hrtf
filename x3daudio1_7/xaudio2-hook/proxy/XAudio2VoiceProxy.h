@@ -10,8 +10,8 @@
 class XAudio2VoiceProxy
 {
 public:
-	XAudio2VoiceProxy(const std::wstring & type_name, ISound3DRegistry * sound3d_registry, const IVoiceMapper & voice_mapper, IXAudio2Voice * original, const void * id);
-	XAudio2VoiceProxy(const std::wstring & type_name, ISound3DRegistry * sound3d_registry, const IVoiceMapper & voice_mapper, IXAudio2Voice * original, UINT32 input_channels, const void * id, const XAUDIO2_EFFECT_CHAIN * original_chain);
+	XAudio2VoiceProxy(const std::wstring & type_name, const IVoiceMapper * voice_mapper, IXAudio2Voice * original, const void * id);
+	XAudio2VoiceProxy(const std::wstring & type_name, ISound3DRegistry * sound3d_registry, const IVoiceMapper * voice_mapper, IXAudio2Voice * original, UINT32 input_channels, const void * id);
 
 public:
 	// Inherited via IXAudio2SubmixVoice
@@ -42,7 +42,7 @@ private:
 	const void * m_id;
 	const std::wstring m_type_name;
 	ISound3DRegistry const * m_sound3d_registry;
-	const IVoiceMapper & m_voice_mapper;
+	const IVoiceMapper * m_voice_mapper;
 	const UINT32 m_input_channels;
 	int m_output_channels;
 	UINT32 m_hrtf_effect_index;

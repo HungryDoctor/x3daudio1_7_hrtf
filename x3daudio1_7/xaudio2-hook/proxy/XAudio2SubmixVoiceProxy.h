@@ -14,7 +14,8 @@ public:
 	typedef std::function<void(XAudio2SubmixVoiceProxy*)> deleter;
 
 public:
-	XAudio2SubmixVoiceProxy(ISound3DRegistry * sound3d_registry, const IVoiceMapper & voice_mapper, IXAudio2SubmixVoice * original, UINT32 input_channels, const XAUDIO2_EFFECT_CHAIN * original_chain, const deleter & on_destroy);
+	XAudio2SubmixVoiceProxy(IXAudio2 * original_xaudio, ISound3DRegistry * sound3d_registry, IVoiceMapper * voice_mapper, const deleter & on_destroy,
+		UINT32 InputChannels, UINT32 InputSampleRate, UINT32 Flags, UINT32 ProcessingStage, const XAUDIO2_VOICE_SENDS *pSendList, const XAUDIO2_EFFECT_CHAIN *pEffectChain);
 	virtual ~XAudio2SubmixVoiceProxy();
 
 public:
@@ -41,10 +42,10 @@ public:
 
 
 private:
-	XAudio2VoiceProxy m_impl;
+	std::unique_ptr< XAudio2VoiceProxy> m_impl;
 	IXAudio2SubmixVoice * m_original;
 	ISound3DRegistry * m_sound3d_registry;
-	const IVoiceMapper & m_voice_mapper;
+	IVoiceMapper * m_voice_mapper;
 	deleter m_on_destroy;
 
 	XAudio2SubmixVoiceProxy(const XAudio2SubmixVoiceProxy &) = delete;

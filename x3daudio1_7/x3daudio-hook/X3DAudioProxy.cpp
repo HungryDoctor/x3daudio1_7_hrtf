@@ -33,8 +33,8 @@ void X3DAudioProxy::X3DAudioCalculate(const X3DAUDIO_LISTENER * pListener, const
 
 	auto id = m_registry->CreateEntry(entry);
 
-	pDSPSettings->pMatrixCoefficients[0] = std::numeric_limits<FLOAT32>::quiet_NaN(); // flagging as hacked
-	pDSPSettings->pMatrixCoefficients[1] = *reinterpret_cast<FLOAT32*>(&id);
+	//pDSPSettings->pMatrixCoefficients[0] = std::numeric_limits<FLOAT32>::quiet_NaN(); // flagging as hacked
+	//pDSPSettings->pMatrixCoefficients[1] = *reinterpret_cast<FLOAT32*>(&id);
 }
 
 const X3DAUDIO_HANDLE & X3DAudioProxy::GetHandle() const
