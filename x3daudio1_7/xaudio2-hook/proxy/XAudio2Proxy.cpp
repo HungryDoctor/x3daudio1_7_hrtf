@@ -35,7 +35,7 @@ HRESULT XAudio2Proxy::CreateInstance(IUnknown * original, REFIID riid, void ** p
 	self->set_sound3d_registry(&Sound3DRegistry::GetInstance());
 	self->set_voice_mapper(new VoiceMapper);
 
-	self->SetVoid(NULL);
+	self->SetVoid(nullptr);
 
 	self->InternalFinalConstructAddRef();
 	HRESULT hr = self->_AtlInitialConstruct();
@@ -46,13 +46,20 @@ HRESULT XAudio2Proxy::CreateInstance(IUnknown * original, REFIID riid, void ** p
 	self->InternalFinalConstructRelease();
 
 	if (SUCCEEDED(hr))
-		hr = original->QueryInterface(__uuidof(IXAudio2), (void**)&self->m_original);
+		hr = original->QueryInterface(__uuidof(IXAudio2), reinterpret_cast<void**>(&self->m_original));
 
 	if (SUCCEEDED(hr))
 		hr = self->QueryInterface(riid, ppvObject);
 
 	if (hr != S_OK)
 		delete self;
+
+	XAUDIO2_DEBUG_CONFIGURATION config = { 0 };
+	config.LogThreadID = true;
+	config.TraceMask = XAUDIO2_LOG_FUNC_CALLS | XAUDIO2_LOG_DETAIL | XAUDIO2_LOG_WARNINGS;
+	config.BreakMask = XAUDIO2_LOG_ERRORS;
+
+	//self->m_original->SetDebugConfiguration(&config);
 
 	return hr;
 }
@@ -86,7 +93,7 @@ STDMETHODIMP_(void) XAudio2Proxy::UnregisterForCallbacks(IXAudio2EngineCallback 
 }
 
 STDMETHODIMP XAudio2Proxy::CreateSourceVoice(IXAudio2SourceVoice ** ppSourceVoice, const WAVEFORMATEX * pSourceFormat, UINT32 Flags, float MaxFrequencyRatio,
-	IXAudio2VoiceCallback *pCallback, const XAUDIO2_VOICE_SENDS *pSendList, const XAUDIO2_EFFECT_CHAIN *pEffectChain)
+                                             IXAudio2VoiceCallback * pCallback, const XAUDIO2_VOICE_SENDS * pSendList, const XAUDIO2_EFFECT_CHAIN * pEffectChain)
 {
 	try
 	{
@@ -102,13 +109,13 @@ STDMETHODIMP XAudio2Proxy::CreateSourceVoice(IXAudio2SourceVoice ** ppSourceVoic
 			pSourceFormat, Flags, MaxFrequencyRatio, pCallback, pSendList, pEffectChain);
 		return S_OK;
 	}
-	catch (std::bad_alloc&)
+	catch (std::bad_alloc &)
 	{
 		return E_OUTOFMEMORY;
 	}
 }
 
-STDMETHODIMP XAudio2Proxy::CreateSubmixVoice(IXAudio2SubmixVoice ** ppSubmixVoice, UINT32 InputChannels, UINT32 InputSampleRate, UINT32 Flags, UINT32 ProcessingStage, const XAUDIO2_VOICE_SENDS *pSendList, const XAUDIO2_EFFECT_CHAIN *pEffectChain)
+STDMETHODIMP XAudio2Proxy::CreateSubmixVoice(IXAudio2SubmixVoice ** ppSubmixVoice, UINT32 InputChannels, UINT32 InputSampleRate, UINT32 Flags, UINT32 ProcessingStage, const XAUDIO2_VOICE_SENDS * pSendList, const XAUDIO2_EFFECT_CHAIN * pEffectChain)
 {
 	try
 	{
@@ -124,13 +131,13 @@ STDMETHODIMP XAudio2Proxy::CreateSubmixVoice(IXAudio2SubmixVoice ** ppSubmixVoic
 			InputChannels, InputSampleRate, Flags, ProcessingStage, pSendList, pEffectChain);
 		return S_OK;
 	}
-	catch (std::bad_alloc&)
+	catch (std::bad_alloc &)
 	{
 		return E_OUTOFMEMORY;
 	}
 }
 
-STDMETHODIMP XAudio2Proxy::CreateMasteringVoice(IXAudio2MasteringVoice ** ppMasteringVoice, UINT32 InputChannels, UINT32 InputSampleRate, UINT32 Flags, UINT32 DeviceIndex, const XAUDIO2_EFFECT_CHAIN *pEffectChain)
+STDMETHODIMP XAudio2Proxy::CreateMasteringVoice(IXAudio2MasteringVoice ** ppMasteringVoice, UINT32 InputChannels, UINT32 InputSampleRate, UINT32 Flags, UINT32 DeviceIndex, const XAUDIO2_EFFECT_CHAIN * pEffectChain)
 {
 	//return m_original->CreateMasteringVoice(ppMasteringVoice, InputChannels, InputSampleRate, Flags, DeviceIndex, pEffectChain);
 
@@ -147,7 +154,7 @@ STDMETHODIMP XAudio2Proxy::CreateMasteringVoice(IXAudio2MasteringVoice ** ppMast
 			InputChannels, InputSampleRate, Flags, DeviceIndex, pEffectChain);
 		return S_OK;
 	}
-	catch (std::bad_alloc&)
+	catch (std::bad_alloc &)
 	{
 		return E_OUTOFMEMORY;
 	}
@@ -190,7 +197,7 @@ void XAudio2Proxy::DestroyVoice(IXAudio2Voice * voice)
 }
 
 
-STDMETHODIMP_(void) XAudio2Proxy::SetDebugConfiguration(const XAUDIO2_DEBUG_CONFIGURATION * pDebugConfiguration, void *pReserved)
+STDMETHODIMP_(void) XAudio2Proxy::SetDebugConfiguration(const XAUDIO2_DEBUG_CONFIGURATION * pDebugConfiguration, void * pReserved)
 {
 	m_original->SetDebugConfiguration(pDebugConfiguration, pReserved);
 }

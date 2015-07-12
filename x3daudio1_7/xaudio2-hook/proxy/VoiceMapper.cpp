@@ -50,7 +50,7 @@ void VoiceMapper::CleanupSends(XAUDIO2_VOICE_SENDS & original_sends) const
 		delete[] original_sends.pSends;
 }
 
-IXAudio2Voice * VoiceMapper::MapVoiceToOriginal(IXAudio2Voice * proxy_voice) const
+IXAudio2Voice* VoiceMapper::MapVoiceToOriginal(IXAudio2Voice * proxy_voice) const
 {
 	auto found_it = m_map.find(proxy_voice);
 	return found_it != m_map.end() ? found_it->second : proxy_voice;

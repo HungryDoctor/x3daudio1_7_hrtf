@@ -3,7 +3,7 @@
 
 Sound3DRegistry Sound3DRegistry::_instance;
 
-Sound3DRegistry & Sound3DRegistry::GetInstance()
+Sound3DRegistry& Sound3DRegistry::GetInstance()
 {
 	return _instance;
 }

@@ -2,7 +2,7 @@
 #include "IVoiceMapper.h"
 #include <unordered_map>
 
-class VoiceMapper :	public IVoiceMapper
+class VoiceMapper : public IVoiceMapper
 {
 public:
 	VoiceMapper();
@@ -19,9 +19,8 @@ public:
 	virtual void CleanupSends(XAUDIO2_VOICE_SENDS & original_sends) const override;
 
 	// Maps voice from proxy_voice to original one. If there's no map for proxy_voice, returns proxy_voice itself.
-	virtual IXAudio2Voice * MapVoiceToOriginal(IXAudio2Voice * proxy_voice) const override;
+	virtual IXAudio2Voice* MapVoiceToOriginal(IXAudio2Voice * proxy_voice) const override;
 private:
 	// maps from proxy voice to original voice
 	std::unordered_map<IXAudio2Voice*, IXAudio2Voice*> m_map;
 };
-

@@ -15,20 +15,20 @@ struct HrtfXapoParam
 class __declspec(uuid("{80D4BED4-7605-4E4C-B29C-5579C375C599}")) HrtfXapoEffect : public CXAPOParametersBase
 {
 public:
-	static HrtfXapoEffect * CreateInstance();
+	static HrtfXapoEffect* CreateInstance();
 
 public:
 	HrtfXapoEffect();
 
 	// Inherited via CXAPOParametersBase
-	STDMETHOD(LockForProcess)(UINT32 InputLockedParameterCount, const XAPO_LOCKFORPROCESS_BUFFER_PARAMETERS *pInputLockedParameters, UINT32 OutputLockedParameterCount, const XAPO_LOCKFORPROCESS_BUFFER_PARAMETERS *pOutputLockedParameters) override;
+	STDMETHOD(LockForProcess)(UINT32 InputLockedParameterCount, const XAPO_LOCKFORPROCESS_BUFFER_PARAMETERS * pInputLockedParameters, UINT32 OutputLockedParameterCount, const XAPO_LOCKFORPROCESS_BUFFER_PARAMETERS * pOutputLockedParameters) override;
 	STDMETHOD_(void, Process)(UINT32 InputProcessParameterCount, const XAPO_PROCESS_BUFFER_PARAMETERS * pInputProcessParameters, UINT32 OutputProcessParameterCount, XAPO_PROCESS_BUFFER_PARAMETERS * pOutputProcessParameters, BOOL IsEnabled) override;
 
 private:
 	bool is_charged() const;
-	void process_valid_buffer(const float* pInput, float* pOutput, const UINT32 frame_count);
-	void process_invalid_buffer(float* pOutput, const UINT32 frames_to_write_count, UINT32& valid_frames_counter);
-	void bypass(const float* pInput, float* pOutput, const UINT32 frame_count, const bool is_valid);
+	void process_valid_buffer(const float * pInput, float * pOutput, const UINT32 frame_count);
+	void process_invalid_buffer(float * pOutput, const UINT32 frames_to_write_count, UINT32 & valid_frames_counter);
+	void bypass(const float * pInput, float * pOutput, const UINT32 frame_count, const bool is_valid);
 	static XAPO_REGISTRATION_PROPERTIES m_regProps;
 
 	WAVEFORMATEX m_input_format;

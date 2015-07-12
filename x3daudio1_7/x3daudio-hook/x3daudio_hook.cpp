@@ -32,7 +32,7 @@ namespace Hook
 		_proxies.push_back(std::move(ptr)); // be careful. std::move invalidates ptr.
 	}
 
-	extern "C" __declspec(dllexport) void STDAPIVCALLTYPE X3DAudioCalculate(const X3DAUDIO_CUSTOM_HANDLE Instance, _In_ const X3DAUDIO_LISTENER* pListener, _In_ const X3DAUDIO_EMITTER* pEmitter, UINT32 Flags, _Inout_ X3DAUDIO_DSP_SETTINGS* pDSPSettings)
+	extern "C" __declspec(dllexport) void STDAPIVCALLTYPE X3DAudioCalculate(const X3DAUDIO_CUSTOM_HANDLE Instance, _In_ const X3DAUDIO_LISTENER * pListener, _In_ const X3DAUDIO_EMITTER * pEmitter, UINT32 Flags, _Inout_ X3DAUDIO_DSP_SETTINGS * pDSPSettings)
 	{
 		Instance->proxy->X3DAudioCalculate(pListener, pEmitter, Flags, pDSPSettings);
 	}

@@ -13,5 +13,5 @@ public:
 
 	virtual void MapSendsToOriginal(const XAUDIO2_VOICE_SENDS & proxy_sends, XAUDIO2_VOICE_SENDS & original_sends) const = 0;
 	virtual void CleanupSends(XAUDIO2_VOICE_SENDS & original_sends) const = 0;
-	virtual IXAudio2Voice * MapVoiceToOriginal(IXAudio2Voice * proxy_voice) const = 0;
+	virtual IXAudio2Voice* MapVoiceToOriginal(IXAudio2Voice * proxy_voice) const = 0;
 };

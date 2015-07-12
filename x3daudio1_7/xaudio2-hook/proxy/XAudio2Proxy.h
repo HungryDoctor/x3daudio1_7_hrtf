@@ -10,7 +10,8 @@
 #include <memory>
 
 
-class ATL_NO_VTABLE XAudio2Proxy :
+class
+	ATL_NO_VTABLE XAudio2Proxy :
 	public ATL::CComObjectRootEx<ATL::CComMultiThreadModel>,
 	public ATL::CComCoClass<XAudio2Proxy, &__uuidof(XAudio2)>,
 	public ATL::IDispatchImpl<IXAudio2>
@@ -23,7 +24,7 @@ public:
 	BEGIN_COM_MAP(XAudio2Proxy)
 		COM_INTERFACE_ENTRY(IXAudio2)
 		COM_INTERFACE_ENTRY(IUnknown)
-	END_COM_MAP()
+		END_COM_MAP()
 
 	DECLARE_PROTECT_FINAL_CONSTRUCT()
 
@@ -32,7 +33,7 @@ public:
 	void FinalRelease();
 
 public:
-	HRESULT static CreateInstance(IUnknown* original, REFIID riid, void **ppvObject);
+	HRESULT static CreateInstance(IUnknown * original, REFIID riid, void ** ppvObject);
 
 public:
 
@@ -42,7 +43,7 @@ public:
 	// ARGUMENTS:
 	//  pCount - Returns the device count.
 	//
-	STDMETHOD(GetDeviceCount) (__out UINT32* pCount);
+	STDMETHOD(GetDeviceCount)(__out UINT32 * pCount);
 
 	// NAME: IXAudio2::GetDeviceDetails
 	// DESCRIPTION: Returns information about the device with the given index.
@@ -51,7 +52,7 @@ public:
 	//  Index - Index of the device to be queried.
 	//  pDeviceDetails - Returns the device details.
 	//
-	STDMETHOD(GetDeviceDetails) (UINT32 Index, __out XAUDIO2_DEVICE_DETAILS* pDeviceDetails);
+	STDMETHOD(GetDeviceDetails)(UINT32 Index, __out XAUDIO2_DEVICE_DETAILS * pDeviceDetails);
 
 	// NAME: IXAudio2::Initialize
 	// DESCRIPTION: Sets global XAudio2 parameters and prepares it for use.
@@ -63,8 +64,8 @@ public:
 	//  The enumeration values are platform-specific; platform-independent code
 	//  can use XAUDIO2_DEFAULT_PROCESSOR to use the default on each platform.
 	//
-	STDMETHOD(Initialize) (UINT32 Flags X2DEFAULT(0),
-		XAUDIO2_PROCESSOR XAudio2Processor X2DEFAULT(XAUDIO2_DEFAULT_PROCESSOR));
+	STDMETHOD(Initialize)(UINT32 Flags X2DEFAULT(0),
+	                      XAUDIO2_PROCESSOR XAudio2Processor X2DEFAULT(XAUDIO2_DEFAULT_PROCESSOR));
 
 	// NAME: IXAudio2::RegisterForCallbacks
 	// DESCRIPTION: Adds a new client to receive XAudio2's engine callbacks.
@@ -72,7 +73,7 @@ public:
 	// ARGUMENTS:
 	//  pCallback - Callback interface to be called during each processing pass.
 	//
-	STDMETHOD(RegisterForCallbacks) (__in IXAudio2EngineCallback* pCallback);
+	STDMETHOD(RegisterForCallbacks)(__in IXAudio2EngineCallback * pCallback);
 
 	// NAME: IXAudio2::UnregisterForCallbacks
 	// DESCRIPTION: Removes an existing receiver of XAudio2 engine callbacks.
@@ -80,7 +81,7 @@ public:
 	// ARGUMENTS:
 	//  pCallback - Previously registered callback interface to be removed.
 	//
-	STDMETHOD_(void, UnregisterForCallbacks) (__in IXAudio2EngineCallback* pCallback);
+	STDMETHOD_(void, UnregisterForCallbacks)(__in IXAudio2EngineCallback * pCallback);
 
 	// NAME: IXAudio2::CreateSourceVoice
 	// DESCRIPTION: Creates and configures a source voice.
@@ -94,13 +95,13 @@ public:
 	//  pSendList - Optional list of voices this voice should send audio to.
 	//  pEffectChain - Optional list of effects to apply to the audio data.
 	//
-	STDMETHOD(CreateSourceVoice) (__deref_out IXAudio2SourceVoice** ppSourceVoice,
-		__in const WAVEFORMATEX* pSourceFormat,
-		UINT32 Flags X2DEFAULT(0),
-		float MaxFrequencyRatio X2DEFAULT(XAUDIO2_DEFAULT_FREQ_RATIO),
-		__in_opt IXAudio2VoiceCallback* pCallback X2DEFAULT(NULL),
-		__in_opt const XAUDIO2_VOICE_SENDS* pSendList X2DEFAULT(NULL),
-		__in_opt const XAUDIO2_EFFECT_CHAIN* pEffectChain X2DEFAULT(NULL));
+	STDMETHOD(CreateSourceVoice)(__deref_out IXAudio2SourceVoice ** ppSourceVoice,
+	                                         __in const WAVEFORMATEX * pSourceFormat,
+	                                         UINT32 Flags X2DEFAULT(0),
+	                                         float MaxFrequencyRatio X2DEFAULT(XAUDIO2_DEFAULT_FREQ_RATIO),
+	                                         __in_opt IXAudio2VoiceCallback * pCallback X2DEFAULT(NULL),
+	                                         __in_opt const XAUDIO2_VOICE_SENDS * pSendList X2DEFAULT(NULL),
+	                                         __in_opt const XAUDIO2_EFFECT_CHAIN * pEffectChain X2DEFAULT(NULL));
 
 	// NAME: IXAudio2::CreateSubmixVoice
 	// DESCRIPTION: Creates and configures a submix voice.
@@ -114,11 +115,11 @@ public:
 	//  pSendList - Optional list of voices this voice should send audio to.
 	//  pEffectChain - Optional list of effects to apply to the audio data.
 	//
-	STDMETHOD(CreateSubmixVoice) (__deref_out IXAudio2SubmixVoice** ppSubmixVoice,
-		UINT32 InputChannels, UINT32 InputSampleRate,
-		UINT32 Flags X2DEFAULT(0), UINT32 ProcessingStage X2DEFAULT(0),
-		__in_opt const XAUDIO2_VOICE_SENDS* pSendList X2DEFAULT(NULL),
-		__in_opt const XAUDIO2_EFFECT_CHAIN* pEffectChain X2DEFAULT(NULL));
+	STDMETHOD(CreateSubmixVoice)(__deref_out IXAudio2SubmixVoice ** ppSubmixVoice,
+	                                         UINT32 InputChannels, UINT32 InputSampleRate,
+	                                         UINT32 Flags X2DEFAULT(0), UINT32 ProcessingStage X2DEFAULT(0),
+	                                         __in_opt const XAUDIO2_VOICE_SENDS * pSendList X2DEFAULT(NULL),
+	                                         __in_opt const XAUDIO2_EFFECT_CHAIN * pEffectChain X2DEFAULT(NULL));
 
 
 	// NAME: IXAudio2::CreateMasteringVoice
@@ -132,21 +133,21 @@ public:
 	//  DeviceIndex - Identifier of the device to receive the output audio.
 	//  pEffectChain - Optional list of effects to apply to the audio data.
 	//
-	STDMETHOD(CreateMasteringVoice) (__deref_out IXAudio2MasteringVoice** ppMasteringVoice,
-		UINT32 InputChannels X2DEFAULT(XAUDIO2_DEFAULT_CHANNELS),
-		UINT32 InputSampleRate X2DEFAULT(XAUDIO2_DEFAULT_SAMPLERATE),
-		UINT32 Flags X2DEFAULT(0), UINT32 DeviceIndex X2DEFAULT(0),
-		__in_opt const XAUDIO2_EFFECT_CHAIN* pEffectChain X2DEFAULT(NULL));
+	STDMETHOD(CreateMasteringVoice)(__deref_out IXAudio2MasteringVoice ** ppMasteringVoice,
+	                                            UINT32 InputChannels X2DEFAULT(XAUDIO2_DEFAULT_CHANNELS),
+	                                            UINT32 InputSampleRate X2DEFAULT(XAUDIO2_DEFAULT_SAMPLERATE),
+	                                            UINT32 Flags X2DEFAULT(0), UINT32 DeviceIndex X2DEFAULT(0),
+	                                            __in_opt const XAUDIO2_EFFECT_CHAIN * pEffectChain X2DEFAULT(NULL));
 
 	// NAME: IXAudio2::StartEngine
 	// DESCRIPTION: Creates and starts the audio processing thread.
 	//
-	STDMETHOD(StartEngine) ();
+	STDMETHOD(StartEngine)();
 
 	// NAME: IXAudio2::StopEngine
 	// DESCRIPTION: Stops and destroys the audio processing thread.
 	//
-	STDMETHOD_(void, StopEngine) ();
+	STDMETHOD_(void, StopEngine)();
 
 	// NAME: IXAudio2::CommitChanges
 	// DESCRIPTION: Atomically applies a set of operations previously tagged
@@ -155,7 +156,7 @@ public:
 	// ARGUMENTS:
 	//  OperationSet - Identifier of the set of operations to be applied.
 	//
-	STDMETHOD(CommitChanges) (UINT32 OperationSet);
+	STDMETHOD(CommitChanges)(UINT32 OperationSet);
 
 	// NAME: IXAudio2::GetPerformanceData
 	// DESCRIPTION: Returns current resource usage details: memory, CPU, etc.
@@ -163,7 +164,7 @@ public:
 	// ARGUMENTS:
 	//  pPerfData - Returns the performance data structure.
 	//
-	STDMETHOD_(void, GetPerformanceData) (__out XAUDIO2_PERFORMANCE_DATA* pPerfData);
+	STDMETHOD_(void, GetPerformanceData)(__out XAUDIO2_PERFORMANCE_DATA * pPerfData);
 
 	// NAME: IXAudio2::SetDebugConfiguration
 	// DESCRIPTION: Configures XAudio2's debug output (in debug builds only).
@@ -172,8 +173,8 @@ public:
 	//  pDebugConfiguration - Structure describing the debug output behavior.
 	//  pReserved - Optional parameter; must be NULL.
 	//
-	STDMETHOD_(void, SetDebugConfiguration) (__in_opt const XAUDIO2_DEBUG_CONFIGURATION* pDebugConfiguration,
-		__in_opt __reserved void* pReserved X2DEFAULT(NULL));
+	STDMETHOD_(void, SetDebugConfiguration)(__in_opt const XAUDIO2_DEBUG_CONFIGURATION * pDebugConfiguration,
+	                                                 __in_opt __reserved void * pReserved X2DEFAULT(NULL));
 
 public:
 	void set_voice_mapper(IVoiceMapper * voice_mapper);

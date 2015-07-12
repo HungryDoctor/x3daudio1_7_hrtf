@@ -4,10 +4,10 @@
 #include "x3daudio-hook/x3daudio_hook.h"
 #include "xaudio2-hook\creation_hook.h"
 
-BOOL APIENTRY DllMain( HMODULE hModule,
-                       DWORD  ul_reason_for_call,
-                       LPVOID lpReserved
-					 )
+BOOL APIENTRY DllMain(HMODULE hModule,
+                      DWORD ul_reason_for_call,
+                      LPVOID lpReserved
+)
 {
 	switch (ul_reason_for_call)
 	{
@@ -25,4 +25,3 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 	}
 	return TRUE;
 }
-

@@ -7,7 +7,7 @@
 class Sound3DRegistry : public ISound3DRegistry
 {
 public:
-	static Sound3DRegistry & GetInstance();
+	static Sound3DRegistry& GetInstance();
 
 public:
 	virtual sound_id CreateEntry(const Sound3DEntry & entry) override;

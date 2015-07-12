@@ -19,9 +19,9 @@ XAPO_REGISTRATION_PROPERTIES HrtfXapoEffect::m_regProps = {
 	| XAPO_FLAG_BITSPERSAMPLE_MUST_MATCH
 	| XAPO_FLAG_BUFFERCOUNT_MUST_MATCH
 	| XAPO_FLAG_INPLACE_SUPPORTED,
-	1, 1, 1, 1 };
+	1, 1, 1, 1};
 
-HrtfXapoEffect * HrtfXapoEffect::CreateInstance()
+HrtfXapoEffect* HrtfXapoEffect::CreateInstance()
 {
 	auto instance = new HrtfXapoEffect();
 	instance->Initialize(nullptr, 0);
@@ -55,7 +55,7 @@ HRESULT HrtfXapoEffect::LockForProcess(UINT32 InputLockedParameterCount, const X
 	return hr;
 }
 
-void HrtfXapoEffect::process_valid_buffer(const float* pInput, float* pOutput, const UINT32 frame_count)
+void HrtfXapoEffect::process_valid_buffer(const float * pInput, float * pOutput, const UINT32 frame_count)
 {
 	const float time_per_frame = 1.0f / float(m_input_format.nSamplesPerSec);
 
@@ -87,13 +87,13 @@ void HrtfXapoEffect::process_valid_buffer(const float* pInput, float* pOutput, c
 	}
 }
 
-void HrtfXapoEffect::process_invalid_buffer(float* pOutput, const UINT32 frames_to_write_count, UINT32& valid_frames_counter)
+void HrtfXapoEffect::process_invalid_buffer(float * pOutput, const UINT32 frames_to_write_count, UINT32 & valid_frames_counter)
 {
 	const float time_per_frame = 1.0f / float(m_input_format.nSamplesPerSec);
 
 	UINT32 valid_frames = 0;
 
-	for (UINT32 i = 0; i < frames_to_write_count ; i++)
+	for (UINT32 i = 0; i < frames_to_write_count; i++)
 	{
 		m_charge[0] += (0 - m_charge[0]) * time_per_frame * left_param;
 		m_charge[1] += (0 - m_charge[1]) * time_per_frame * right_param;
@@ -104,7 +104,7 @@ void HrtfXapoEffect::process_invalid_buffer(float* pOutput, const UINT32 frames_
 		if (
 			!(pOutput[i * OUTPUT_CHANNEL_COUNT + 0] < 10.0f && pOutput[i * OUTPUT_CHANNEL_COUNT + 0] > -10.0f
 				&& pOutput[i * OUTPUT_CHANNEL_COUNT + 1] < 10.0f && pOutput[i * OUTPUT_CHANNEL_COUNT + 1] > -10.0f)
-			)
+		)
 		{
 			logger::log("shiet");
 		}
@@ -115,7 +115,7 @@ void HrtfXapoEffect::process_invalid_buffer(float* pOutput, const UINT32 frames_
 	valid_frames_counter = valid_frames;
 }
 
-void HrtfXapoEffect::bypass(const float* pInput, float* pOutput, const UINT32 frame_count, const bool is_input_valid)
+void HrtfXapoEffect::bypass(const float * pInput, float * pOutput, const UINT32 frame_count, const bool is_input_valid)
 {
 	const bool in_place = (pInput == pOutput);
 
@@ -156,13 +156,11 @@ void HrtfXapoEffect::Process(UINT32 InputProcessParameterCount, const XAPO_PROCE
 	auto pOutput = reinterpret_cast<float*>(pOutputProcessParameters[0].pBuffer);
 	const bool is_input_valid = pInputProcessParameters[0].BufferFlags == XAPO_BUFFER_VALID;
 
-	auto params = CXAPOParametersBase::BeginProcess();
-
-	pOutputProcessParameters[0].BufferFlags = (is_input_valid || is_charged()) ? XAPO_BUFFER_VALID : XAPO_BUFFER_SILENT;
+	auto params = BeginProcess();
 
 	if (IsEnabled)
 	{
-		/*if (is_input_valid)
+		if (is_input_valid)
 		{
 			pOutputProcessParameters[0].BufferFlags = XAPO_BUFFER_VALID;
 			pOutputProcessParameters[0].ValidFrameCount = input_frame_count;
@@ -179,8 +177,7 @@ void HrtfXapoEffect::Process(UINT32 InputProcessParameterCount, const XAPO_PROCE
 		else
 		{
 			pOutputProcessParameters[0].BufferFlags = XAPO_BUFFER_SILENT;
-		}*/
-		bypass(pInput, pOutput, input_frame_count, is_input_valid);
+		}
 	}
 	else
 	{
@@ -190,7 +187,7 @@ void HrtfXapoEffect::Process(UINT32 InputProcessParameterCount, const XAPO_PROCE
 		bypass(pInput, pOutput, input_frame_count, is_input_valid);
 	}
 
-	CXAPOParametersBase::EndProcess();
+	EndProcess();
 }
 
 bool HrtfXapoEffect::is_charged() const

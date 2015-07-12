@@ -16,27 +16,27 @@
 
 namespace Hook
 {
-	HRESULT WINAPI CoCreateInstance(REFCLSID rclsid, LPUNKNOWN pUnkOuter, DWORD dwClsContext, REFIID riid, LPVOID* ppv);
-	HRESULT WINAPI CoGetClassObject(REFCLSID rclsid, DWORD dwClsContext, COSERVERINFO *pServerInfo, REFIID riid, LPVOID *ppv);
+	HRESULT WINAPI CoCreateInstance(REFCLSID rclsid, LPUNKNOWN pUnkOuter, DWORD dwClsContext, REFIID riid, LPVOID * ppv);
+	HRESULT WINAPI CoGetClassObject(REFCLSID rclsid, DWORD dwClsContext, COSERVERINFO * pServerInfo, REFIID riid, LPVOID * ppv);
 };
 
-typedef HRESULT(WINAPI *CoCreateInstance_T)(REFCLSID, LPUNKNOWN, DWORD, REFIID, LPVOID*);
-typedef HRESULT(WINAPI *CoGetClassObject_T)(REFCLSID rclsid, DWORD dwClsContext, COSERVERINFO *pServerInfo, REFIID riid, LPVOID *ppv);
+typedef HRESULT (WINAPI *CoCreateInstance_T)(REFCLSID, LPUNKNOWN, DWORD, REFIID, LPVOID *);
+typedef HRESULT (WINAPI *CoGetClassObject_T)(REFCLSID rclsid, DWORD dwClsContext, COSERVERINFO * pServerInfo, REFIID riid, LPVOID * ppv);
 
 namespace Original
 {
-	CoCreateInstance_T  CoCreateInstance = NULL;
-	CoGetClassObject_T  CoGetClassObject = NULL;
+	CoCreateInstance_T CoCreateInstance = NULL;
+	CoGetClassObject_T CoGetClassObject = NULL;
 }
 
 //////////////////////////////////////////////////////////////////////////
 
 struct FunctionInfo
 {
-	char*  FunctionModule;
-	char*  FunctionName;
-	void** OriginalFunction;
-	void*  HookFunction;
+	char * FunctionModule;
+	char * FunctionName;
+	void ** OriginalFunction;
+	void * HookFunction;
 };
 
 FunctionInfo g_Functions[] =
@@ -49,7 +49,7 @@ const size_t g_FunctionsCount = sizeof(g_Functions) / sizeof(FunctionInfo);
 
 //////////////////////////////////////////////////////////////////////////
 
-HRESULT WINAPI Hook::CoCreateInstance(REFCLSID rclsid, LPUNKNOWN pUnkOuter, DWORD dwClsContext, REFIID riid, LPVOID* ppv)
+HRESULT WINAPI Hook::CoCreateInstance(REFCLSID rclsid, LPUNKNOWN pUnkOuter, DWORD dwClsContext, REFIID riid, LPVOID * ppv)
 {
 	if (rclsid == __uuidof(XAudio2))
 	{
@@ -61,13 +61,15 @@ HRESULT WINAPI Hook::CoCreateInstance(REFCLSID rclsid, LPUNKNOWN pUnkOuter, DWOR
 		if (FAILED(hr))
 			return hr;
 
+		//Sleep(10000);
+
 		return XAudio2Proxy::CreateInstance(originalObject, riid, ppv);
 	}
 
 	return Original::CoCreateInstance(rclsid, pUnkOuter, dwClsContext, riid, ppv);
 }
 
-HRESULT WINAPI Hook::CoGetClassObject(REFCLSID rclsid, DWORD dwClsContext, COSERVERINFO *pServerInfo, REFIID riid, LPVOID *ppv)
+HRESULT WINAPI Hook::CoGetClassObject(REFCLSID rclsid, DWORD dwClsContext, COSERVERINFO * pServerInfo, REFIID riid, LPVOID * ppv)
 {
 	if (riid == IID_IClassFactory)
 	{
@@ -93,7 +95,7 @@ void install_com_hooks()
 
 		*g_Functions[i].OriginalFunction = GetProcAddress(GetModuleHandleA(g_Functions[i].FunctionModule), g_Functions[i].FunctionName);
 
-		if (*g_Functions[i].OriginalFunction == NULL)
+		if (*g_Functions[i].OriginalFunction == nullptr)
 			throw std::runtime_error("Cannot find the function ");
 
 		if (!Mhook_SetHook(g_Functions[i].OriginalFunction, g_Functions[i].HookFunction))

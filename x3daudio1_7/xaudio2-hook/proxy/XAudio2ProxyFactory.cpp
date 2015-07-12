@@ -3,7 +3,7 @@
 #include "XAudio2Proxy.h"
 #include <stdexcept>
 
-STDMETHODIMP XAudio2ProxyFactory::CreateInstance(IUnknown *pUnkOuter, REFIID riid, void **ppvObject)
+STDMETHODIMP XAudio2ProxyFactory::CreateInstance(IUnknown * pUnkOuter, REFIID riid, void ** ppvObject)
 {
 	if (pUnkOuter)
 		return CLASS_E_NOAGGREGATION;
@@ -21,11 +21,11 @@ STDMETHODIMP XAudio2ProxyFactory::LockServer(BOOL fLock)
 	return m_OriginalFactory->LockServer(fLock);
 }
 
-HRESULT XAudio2ProxyFactory::CreateFactory(IClassFactory* originalFactory, void** proxyFactory)
+HRESULT XAudio2ProxyFactory::CreateFactory(IClassFactory * originalFactory, void ** proxyFactory)
 {
 	try
 	{
-		ATL::CComObjectNoLock<XAudio2ProxyFactory>* self = new ATL::CComObjectNoLock<XAudio2ProxyFactory>;
+		ATL::CComObjectNoLock<XAudio2ProxyFactory> * self = new ATL::CComObjectNoLock<XAudio2ProxyFactory>;
 
 		self->SetVoid(NULL);
 
@@ -47,7 +47,7 @@ HRESULT XAudio2ProxyFactory::CreateFactory(IClassFactory* originalFactory, void*
 
 		return hr;
 	}
-	catch (std::bad_alloc&)
+	catch (std::bad_alloc &)
 	{
 		return E_OUTOFMEMORY;
 	}
