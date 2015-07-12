@@ -157,10 +157,16 @@ HRESULT XAudio2VoiceProxy::SetOutputMatrix(IXAudio2Voice * pDestinationVoice, UI
 			//if (m_input_channels == 2)
 			m_original->EnableEffect(m_hrtf_effect_index, OperationSet);
 
-			//auto & id = *reinterpret_cast<const sound_id*>(&pLevelMatrix[1]);
-			//auto sound3d = m_sound3d_registry->GetEntry(id);
+			auto & id = *reinterpret_cast<const sound_id*>(&pLevelMatrix[1]);
+			auto sound3d = m_sound3d_registry->GetEntry(id);
 
-			float matrix[] = { 0.1f, 0.0f, 0.0f, 0.1f };
+			HrtfXapoParam params;
+			params.source_to_emitter_transformed = sound3d.relative_position;
+			params.volume_multiplier = sound3d.volume_multiplier;
+
+			m_original->SetEffectParameters(m_hrtf_effect_index, &params, sizeof(params), OperationSet);
+
+			float matrix[] = { 1.0f, 0.0f, 0.0f, 1.0f };
 			return m_original->SetOutputMatrix(m_voice_mapper->MapVoiceToOriginal(pDestinationVoice), 2, 2, matrix, OperationSet);
 		}
 		else

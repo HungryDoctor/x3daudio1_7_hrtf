@@ -17,7 +17,6 @@ class X3DAudioProxy
 public:
 	X3DAudioProxy(const x3daudio1_7_dll & original, ISound3DRegistry * registry, UINT32 SpeakerChannelMask, FLOAT32 SpeedOfSound);
 	~X3DAudioProxy();
-
 	void X3DAudioCalculate(const X3DAUDIO_LISTENER * pListener, const X3DAUDIO_EMITTER * pEmitter, UINT32 Flags, X3DAUDIO_DSP_SETTINGS * pDSPSettings);
 
 	const X3DAUDIO_HANDLE& GetHandle() const;
@@ -30,4 +29,5 @@ private:
 private:
 	X3DAudioProxy(const X3DAudioProxy &) = delete;
 	X3DAudioProxy& operator=(const X3DAudioProxy &) = delete;
+	float sample_volume_curve(const X3DAUDIO_EMITTER* pEmitter, const float distance);
 };

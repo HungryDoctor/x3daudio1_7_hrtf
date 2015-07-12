@@ -92,6 +92,21 @@
     <ClInclude Include="interop\ISound3DRegistry.h" />
     <ClInclude Include="interop\Sound3DRegistry.h" />
     <ClInclude Include="logger.h" />
+    <ClInclude Include="math\base_matrix.hpp" />
+    <ClInclude Include="math\base_matrix4x4.hpp" />
+    <ClInclude Include="math\base_matrix4x4_transfrom.hpp" />
+    <ClInclude Include="math\base_matrix_functions.hpp" />
+    <ClInclude Include="math\base_matrix_operations.hpp" />
+    <ClInclude Include="math\helper.hpp" />
+    <ClInclude Include="math\math_types.h" />
+    <ClInclude Include="math\new_math.hpp" />
+    <ClInclude Include="math\random.hpp" />
+    <ClInclude Include="math\RandomEngine.h" />
+    <ClInclude Include="math\vector.hpp" />
+    <ClInclude Include="math\vector3.hpp" />
+    <ClInclude Include="math\vector3_operations.hpp" />
+    <ClInclude Include="math\vector_functions.hpp" />
+    <ClInclude Include="math\vector_operations.hpp" />
     <ClInclude Include="mhook\mhook.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
@@ -138,6 +153,7 @@
     </ClCompile>
     <ClCompile Include="interop\Sound3DRegistry.cpp" />
     <ClCompile Include="logger.cpp" />
+    <ClCompile Include="math\RandomEngine.cpp" />
     <ClCompile Include="mhook\mhook.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>

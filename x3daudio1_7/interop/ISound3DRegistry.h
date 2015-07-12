@@ -1,10 +1,11 @@
 #pragma once
 
+#include "math/math_types.h"
+
 struct Sound3DEntry
 {
-	float relative_position[3];
-
-	float matrix_coefficients[2];
+	float volume_multiplier;
+	math::vector3f relative_position;
 };
 
 typedef int sound_id;
