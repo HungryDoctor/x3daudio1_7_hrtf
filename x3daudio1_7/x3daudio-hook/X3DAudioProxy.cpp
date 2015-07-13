@@ -27,17 +27,17 @@ void X3DAudioProxy::X3DAudioCalculate(const X3DAUDIO_LISTENER * pListener, const
 	m_original.X3DAudioCalculate(m_handle, pListener, pEmitter, Flags, pDSPSettings);
 
 	// changing left-hand to ortodox right-hand
-	math::vector3 listener_position(pListener->Position.x, pListener->Position.y, -pListener->Position.z);
-	math::vector3 emitter_position(pEmitter->Position.x, pEmitter->Position.y, -pEmitter->Position.z);
+	math::vector3 listener_position(pListener->Position.x, pListener->Position.y, pListener->Position.z);
+	math::vector3 emitter_position(pEmitter->Position.x, pEmitter->Position.y, pEmitter->Position.z);
 
 	auto listener_to_emitter = emitter_position - listener_position;
 	
-	math::vector3 listener_frame_front(pListener->OrientFront.x, pListener->OrientFront.y, -pListener->OrientFront.z);
-	math::vector3 listener_frame_up(pListener->OrientTop.x, pListener->OrientTop.y, -pListener->OrientTop.z);
-	auto listener_frame_left = math::cross(listener_frame_up, listener_frame_front);
+	math::vector3 listener_frame_front(pListener->OrientFront.x, pListener->OrientFront.y, pListener->OrientFront.z);
+	math::vector3 listener_frame_up(pListener->OrientTop.x, pListener->OrientTop.y, pListener->OrientTop.z);
+	auto listener_frame_right = math::cross(listener_frame_up, listener_frame_front);
 
-	math::matrix3 listener_basis(listener_frame_left, listener_frame_up, listener_frame_front);
-	auto world_to_listener_matrix = math::inverse(listener_basis);
+	math::matrix3 listener_basis(listener_frame_right, listener_frame_up, listener_frame_front);
+	auto world_to_listener_matrix = (listener_basis);
 
 	Sound3DEntry entry;
 

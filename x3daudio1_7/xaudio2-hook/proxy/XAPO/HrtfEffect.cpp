@@ -61,18 +61,22 @@ void HrtfXapoEffect::process_valid_buffer(const float * pInput, float * pOutput,
 {
 	const float volume = params.volume_multiplier;
 
+	auto dot = math::dot(math::normalize(params.source_to_emitter_transformed), math::vector3(1, 0, 0));
+	float left_volume = volume * (std::max(-dot, 0.0f) + 0.25f);
+	float right_volume = volume * (std::max(dot, 0.0f) + 0.25f);
+
 	if (m_input_format.nChannels == 1)
 	{
 		for (UINT32 i = 0; i < frame_count; i++)
 		{
-			process_frame(pInput[i] * volume, pInput[i] * volume, pOutput[i * OUTPUT_CHANNEL_COUNT + 0], pOutput[i * OUTPUT_CHANNEL_COUNT + 1]);
+			process_frame(pInput[i] * left_volume, pInput[i] * right_volume, pOutput[i * OUTPUT_CHANNEL_COUNT + 0], pOutput[i * OUTPUT_CHANNEL_COUNT + 1]);
 		}
 	}
 	else if (m_input_format.nChannels == 2)
 	{
 		for (UINT32 i = 0; i < frame_count; i++)
 		{
-			process_frame(pInput[i * 2 + 0] * volume, pInput[i * 2 + 1] * volume, pOutput[i * OUTPUT_CHANNEL_COUNT + 0], pOutput[i * OUTPUT_CHANNEL_COUNT + 1]);
+			process_frame(pInput[i * 2 + 0] * left_volume, pInput[i * 2 + 1] * right_volume, pOutput[i * OUTPUT_CHANNEL_COUNT + 0], pOutput[i * OUTPUT_CHANNEL_COUNT + 1]);
 		}
 	}
 }
@@ -120,7 +124,7 @@ void HrtfXapoEffect::process_frame(const float left_input, const float right_inp
 	m_charge[1] += (right_input - m_charge[1]) * m_time_per_frame * right_param;
 
 	left_output = m_charge[0] * 1.0f;
-	right_output = (right_input - m_charge[1]) * 1.0f;
+	right_output = m_charge[1] * 1.0f;
 }
 
 void HrtfXapoEffect::Process(UINT32 InputProcessParameterCount, const XAPO_PROCESS_BUFFER_PARAMETERS * pInputProcessParameters, UINT32 OutputProcessParameterCount, XAPO_PROCESS_BUFFER_PARAMETERS * pOutputProcessParameters, BOOL IsEnabled)
