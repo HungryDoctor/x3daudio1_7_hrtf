@@ -89,6 +89,9 @@
     <ClInclude Include="disasm\disasm_x86.h" />
     <ClInclude Include="disasm\disasm_x86_tables.h" />
     <ClInclude Include="disasm\misc.h" />
+    <ClInclude Include="hrtf\Endianness.h" />
+    <ClInclude Include="hrtf\HrtfData.h" />
+    <ClInclude Include="hrtf\HrtfDataSet.h" />
     <ClInclude Include="interop\ISound3DRegistry.h" />
     <ClInclude Include="interop\Sound3DRegistry.h" />
     <ClInclude Include="logger.h" />
@@ -151,6 +154,8 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
       </PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="hrtf\HrtfData.cpp" />
+    <ClCompile Include="hrtf\HrtfDataSet.cpp" />
     <ClCompile Include="interop\Sound3DRegistry.cpp" />
     <ClCompile Include="logger.cpp" />
     <ClCompile Include="math\RandomEngine.cpp" />
