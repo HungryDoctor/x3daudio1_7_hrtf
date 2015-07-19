@@ -45,7 +45,7 @@ private:
 	void process_invalid_buffer(float * pOutput, const UINT32 frames_to_write_count, UINT32 & valid_frames_counter, const HrtfXapoParam & params);
 	void bypass(const float * pInput, float * pOutput, const UINT32 frame_count, const bool is_valid);
 	void convolve(const UINT32 frame_index, DirectionData& hrtf_data, float& output);
-	void process_frame(float & left_output, float & right_output, const UINT32 frame_index, const float volume);
+	void process_frame(float & left_output, float & right_output, const UINT32 frame_index);
 	static XAPO_REGISTRATION_PROPERTIES m_regProps;
 
 	WAVEFORMATEX m_input_format;

@@ -25,8 +25,8 @@ typedef HRESULT (WINAPI *CoGetClassObject_T)(REFCLSID rclsid, DWORD dwClsContext
 
 namespace Original
 {
-	CoCreateInstance_T CoCreateInstance = NULL;
-	CoGetClassObject_T CoGetClassObject = NULL;
+	CoCreateInstance_T CoCreateInstance = nullptr;
+	CoGetClassObject_T CoGetClassObject = nullptr;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -61,8 +61,6 @@ HRESULT WINAPI Hook::CoCreateInstance(REFCLSID rclsid, LPUNKNOWN pUnkOuter, DWOR
 		if (FAILED(hr))
 			return hr;
 
-		//Sleep(10000);
-
 		return XAudio2Proxy::CreateInstance(originalObject, riid, ppv);
 	}
 
@@ -74,7 +72,11 @@ HRESULT WINAPI Hook::CoGetClassObject(REFCLSID rclsid, DWORD dwClsContext, COSER
 	if (riid == IID_IClassFactory)
 	{
 		ATL::CComPtr<IClassFactory> originalFactory;
+#if defined(_DEBUG)
 		HRESULT hr = Original::CoGetClassObject(__uuidof(XAudio2_Debug), dwClsContext, pServerInfo, riid, reinterpret_cast<void**>(&originalFactory));
+#else
+		HRESULT hr = Original::CoGetClassObject(__uuidof(XAudio2), dwClsContext, pServerInfo, riid, reinterpret_cast<void**>(&originalFactory));
+#endif
 		if (FAILED(hr))
 			return hr;
 
@@ -96,10 +98,10 @@ void install_com_hooks()
 		*g_Functions[i].OriginalFunction = GetProcAddress(GetModuleHandleA(g_Functions[i].FunctionModule), g_Functions[i].FunctionName);
 
 		if (*g_Functions[i].OriginalFunction == nullptr)
-			throw std::runtime_error("Cannot find the function ");
+			throw std::runtime_error("Cannot find the function");
 
 		if (!Mhook_SetHook(g_Functions[i].OriginalFunction, g_Functions[i].HookFunction))
-			throw std::runtime_error("Cannot set hook on the function ");
+			throw std::runtime_error("Cannot set hook on the function");
 	}
 }
 
