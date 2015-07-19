@@ -44,6 +44,9 @@ void X3DAudioProxy::X3DAudioCalculate(const X3DAUDIO_LISTENER * pListener, const
 	entry.relative_position = world_to_listener_matrix * listener_to_emitter;
 	entry.volume_multiplier = sample_volume_curve(pEmitter, math::length(listener_to_emitter));
 
+	entry.azimuth = std::atan2(entry.relative_position[0], entry.relative_position[2]);
+	entry.elevation = std::asin(math::normalize(entry.relative_position)[1]);
+
 	auto id = m_registry->CreateEntry(entry);
 
 	pDSPSettings->pMatrixCoefficients[0] = std::numeric_limits<FLOAT32>::quiet_NaN(); // flagging as hacked
@@ -54,11 +57,20 @@ float X3DAudioProxy::sample_volume_curve(const X3DAUDIO_EMITTER* pEmitter, float
 {
 	float normalized_distance = distance / pEmitter->CurveDistanceScaler;
 
-	if (pEmitter->pVolumeCurve->PointCount == 0)
-		return 0;
+	if (pEmitter->pVolumeCurve == nullptr)
+	{
+		float clamped_distance = std::max(1.0f, normalized_distance);
+		return 1.0f / (clamped_distance * clamped_distance);
+	}
 
-	auto * greater_point = std::find_if(pEmitter->pVolumeCurve->pPoints, pEmitter->pVolumeCurve->pPoints + pEmitter->pVolumeCurve->PointCount, [=](auto point) { return point.Distance > normalized_distance; });
-	if (greater_point != pEmitter->pVolumeCurve->pPoints + pEmitter->pVolumeCurve->PointCount + 1)
+	if (pEmitter->pVolumeCurve->PointCount == 0)
+	{
+		logger::log("Warning: no points in the volume curve");
+		return 0;
+	}
+
+	auto * greater_point = std::find_if(pEmitter->pVolumeCurve->pPoints, pEmitter->pVolumeCurve->pPoints + pEmitter->pVolumeCurve->PointCount, [=](const auto & point) { return point.Distance >= normalized_distance; });
+	if (greater_point != pEmitter->pVolumeCurve->pPoints + pEmitter->pVolumeCurve->PointCount)
 	{
 		if (greater_point > &pEmitter->pVolumeCurve->pPoints[0])
 		{

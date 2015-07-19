@@ -18,7 +18,7 @@ XAudio2SubmixVoiceProxy::XAudio2SubmixVoiceProxy(IXAudio2 * original_xaudio, ISo
 	  , m_on_destroy(on_destroy)
 {
 	std::wstringstream ss;
-	ss << "XAudio2SubmixVoiceProxy::ctor InputChannels=" << InputChannels << " InputSampleRate=" << InputSampleRate << " ProcessingStage=" << ProcessingStage << " Effects=" << (pEffectChain ? std::to_wstring(pEffectChain->EffectCount) : L"nullptr") << " ";
+	ss << "XAudio2SubmixVoiceProxy::ctor InputChannels=" << InputChannels << " InputSampleRate=" << InputSampleRate << " ProcessingStage=" << ProcessingStage << " Effects=" << (pEffectChain ? std::to_wstring(pEffectChain->EffectCount) : L"nullptr") << " Flags=" << Flags << " ";
 	print_sends(ss, pSendList);
 	logger::log(ss.str());
 
@@ -47,9 +47,11 @@ XAudio2SubmixVoiceProxy::XAudio2SubmixVoiceProxy(IXAudio2 * original_xaudio, ISo
 	chain.EffectCount = effect_count + 1;
 	chain.pEffectDescriptors = apoDesc;
 
+	const auto adjusted_flags = Flags & ~XAUDIO2_VOICE_USEFILTER;
+
 	IXAudio2SubmixVoice * original_voice = nullptr;
 	HRESULT result;
-	if (SUCCEEDED(result = original_xaudio->CreateSubmixVoice(&original_voice, InputChannels, InputSampleRate, Flags, ProcessingStage, pSendList ? &originalSendList : 0, &chain)))
+	if (SUCCEEDED(result = original_xaudio->CreateSubmixVoice(&original_voice, InputChannels, InputSampleRate, adjusted_flags, ProcessingStage, pSendList ? &originalSendList : 0, &chain)))
 	{
 		m_original = original_voice;
 		m_impl.reset(new XAudio2VoiceProxy(L"XAudio2SubmixVoiceProxy", m_sound3d_registry, m_voice_mapper, m_original, InputChannels, this, effect_count));

@@ -1,5 +1,7 @@
-﻿#include "HrtfDataSet.h"
+﻿#include "stdafx.h"
+#include "HrtfDataSet.h"
 #include <fstream>
+#include <algorithm>
 
 HrtfDataSet::HrtfDataSet(const std::vector<std::wstring> & data_files)
 {
@@ -24,4 +26,9 @@ void HrtfDataSet::GetDirectionData(uint32_t sample_rate, angle_t elevation, angl
 bool HrtfDataSet::has_sample_rate(uint32_t sample_rate) const
 {
 	return m_data.find(sample_rate) != m_data.end();
+}
+
+const HrtfData& HrtfDataSet::get_sample_rate_data(uint32_t sampl_rate) const
+{
+	return m_data.at(sampl_rate);
 }

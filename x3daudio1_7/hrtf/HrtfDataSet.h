@@ -14,6 +14,9 @@ public:
 	void GetDirectionData(uint32_t sample_rate, angle_t elevation, angle_t azimuth, DirectionData & ref_data_left, DirectionData & ref_data_right) const;
 
 	bool has_sample_rate(uint32_t sample_rate) const;
+	
+	const HrtfData & get_sample_rate_data(uint32_t sampl_rate) const;
+
 private:
 	std::map<uint32_t, HrtfData> m_data; // sample rate - data pairs
 };

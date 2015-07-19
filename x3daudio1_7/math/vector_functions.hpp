@@ -1,7 +1,7 @@
 #pragma once
 
 #include "vector.hpp"
-#include <algorithm>
+#include <cmath>
 
 
 namespace math

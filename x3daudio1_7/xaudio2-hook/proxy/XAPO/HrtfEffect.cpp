@@ -23,17 +23,24 @@ XAPO_REGISTRATION_PROPERTIES HrtfXapoEffect::m_regProps = {
 
 HrtfXapoEffect* HrtfXapoEffect::CreateInstance()
 {
-	auto instance = new HrtfXapoEffect();
+	static std::shared_ptr<HrtfDataSet> hrtf_data(new HrtfDataSet({ L"hrtf\\default-44100.mhr", L"hrtf\\default-48000.mhr" }));
+	auto instance = new HrtfXapoEffect(hrtf_data);
 	instance->Initialize(nullptr, 0);
 	return instance;
 }
 
-HrtfXapoEffect::HrtfXapoEffect() :
+HrtfXapoEffect::HrtfXapoEffect(const std::shared_ptr<HrtfDataSet> & hrtf_data) :
 	CXAPOParametersBase(&m_regProps, reinterpret_cast<BYTE*>(m_params), sizeof(HrtfXapoParam), FALSE)
 	, m_time_per_frame(0)
+	, m_hrtf_data(hrtf_data)
+	, m_invalid_buffers_count(0)
 {
-	m_charge[0] = 0;
-	m_charge[1] = 0;
+	m_params[0] = { 0 };
+	m_params[1] = { 0 };
+	m_params[2] = { 0 };
+	m_signal.reserve(192);
+	m_hrtf_data_left.impulse_response.reserve(128);
+	m_hrtf_data_right.impulse_response.reserve(128);
 }
 
 HRESULT HrtfXapoEffect::LockForProcess(UINT32 InputLockedParameterCount, const XAPO_LOCKFORPROCESS_BUFFER_PARAMETERS * pInputLockedParameters, UINT32 OutputLockedParameterCount, const XAPO_LOCKFORPROCESS_BUFFER_PARAMETERS * pOutputLockedParameters)
@@ -53,6 +60,16 @@ HRESULT HrtfXapoEffect::LockForProcess(UINT32 InputLockedParameterCount, const X
 		memcpy(&m_output_format, pOutputLockedParameters[0].pFormat, sizeof(m_output_format));
 
 		m_time_per_frame = 1.0f / float(m_input_format.nSamplesPerSec);
+		if (m_hrtf_data->has_sample_rate(m_input_format.nSamplesPerSec))
+		{
+			auto data = m_hrtf_data->get_sample_rate_data(m_input_format.nSamplesPerSec);
+			m_history_size = data.get_longest_delay() + data.get_respoone_length();
+			m_buffers_per_history = m_history_size / (pInputLockedParameters[0].MaxFrameCount + m_history_size - 1);
+			m_invalid_buffers_count = m_buffers_per_history;
+
+			m_signal.resize(m_history_size + pInputLockedParameters[0].MaxFrameCount);
+			std::fill(std::begin(m_signal), std::begin(m_signal) + m_history_size, 0.0f);
+		}
 	}
 	return hr;
 }
@@ -61,33 +78,41 @@ void HrtfXapoEffect::process_valid_buffer(const float * pInput, float * pOutput,
 {
 	const float volume = params.volume_multiplier;
 
-	auto dot = math::dot(math::normalize(params.source_to_emitter_transformed), math::vector3(1, 0, 0));
-	float left_volume = volume * (std::max(-dot, 0.0f) + 0.25f);
-	float right_volume = volume * (std::max(dot, 0.0f) + 0.25f);
-
 	if (m_input_format.nChannels == 1)
 	{
-		for (UINT32 i = 0; i < frame_count; i++)
-		{
-			process_frame(pInput[i] * left_volume, pInput[i] * right_volume, pOutput[i * OUTPUT_CHANNEL_COUNT + 0], pOutput[i * OUTPUT_CHANNEL_COUNT + 1]);
-		}
+		std::copy(pInput, pInput + frame_count, std::begin(m_signal) + m_history_size);
 	}
 	else if (m_input_format.nChannels == 2)
 	{
 		for (UINT32 i = 0; i < frame_count; i++)
 		{
-			process_frame(pInput[i * 2 + 0] * left_volume, pInput[i * 2 + 1] * right_volume, pOutput[i * OUTPUT_CHANNEL_COUNT + 0], pOutput[i * OUTPUT_CHANNEL_COUNT + 1]);
+			m_signal[i + m_history_size] = (pInput[i * 2 + 0] + pInput[i * 2 + 1]) * 0.5f;
 		}
 	}
+
+	for (UINT32 i = 0; i < frame_count; i++)
+	{
+		process_frame(pOutput[i * OUTPUT_CHANNEL_COUNT + 0], pOutput[i * OUTPUT_CHANNEL_COUNT + 1], i, volume);
+	}
+
+	std::copy(std::end(m_signal) - m_history_size, std::end(m_signal), std::begin(m_signal));
+	m_invalid_buffers_count = 0;
 }
 
 void HrtfXapoEffect::process_invalid_buffer(float * pOutput, const UINT32 frames_to_write_count, UINT32 & valid_frames_counter, const HrtfXapoParam & params)
 {
+	const float volume = params.volume_multiplier;
+
+	std::fill(std::begin(m_signal) + m_history_size, std::end(m_signal), 0.0f);
+
 	for (UINT32 i = 0; i < frames_to_write_count; i++)
 	{
-		process_frame(0, 0, pOutput[i * OUTPUT_CHANNEL_COUNT + 0], pOutput[i * OUTPUT_CHANNEL_COUNT + 1]);
+		process_frame(pOutput[i * OUTPUT_CHANNEL_COUNT + 0], pOutput[i * OUTPUT_CHANNEL_COUNT + 1], i, volume);
 	}
 	valid_frames_counter = frames_to_write_count;
+
+	std::copy(std::end(m_signal) - m_history_size, std::end(m_signal), std::begin(m_signal));
+	m_invalid_buffers_count++;
 }
 
 void HrtfXapoEffect::bypass(const float * pInput, float * pOutput, const UINT32 frame_count, const bool is_input_valid)
@@ -118,13 +143,29 @@ void HrtfXapoEffect::bypass(const float * pInput, float * pOutput, const UINT32 
 	}
 }
 
-void HrtfXapoEffect::process_frame(const float left_input, const float right_input, float& left_output, float& right_output)
+void HrtfXapoEffect::convolve(const UINT32 frame_index, DirectionData& hrtf_data, float& output)
 {
-	m_charge[0] += (left_input - m_charge[0]) * m_time_per_frame * left_param;
-	m_charge[1] += (right_input - m_charge[1]) * m_time_per_frame * right_param;
+	const UINT32 start_signal_index = m_history_size + frame_index - hrtf_data.delay;
 
-	left_output = m_charge[0] * 1.0f;
-	right_output = m_charge[1] * 1.0f;
+	_ASSERT(static_cast<int>(start_signal_index) - static_cast<int>(hrtf_data.impulse_response.size()) > 0);
+
+	float sum = 0.0f;
+	for (UINT32 i = 0; i < hrtf_data.impulse_response.size(); i++)
+	{
+		float val = m_signal[start_signal_index - i] * hrtf_data.impulse_response[i];
+		sum += val;
+	}
+	output = sum;
+}
+
+void HrtfXapoEffect::process_frame(float& left_output, float& right_output, const UINT32 frame_index, const float volume)
+{
+	float left;
+	float right;
+	convolve(frame_index, m_hrtf_data_left, left);
+	convolve(frame_index, m_hrtf_data_right, right);
+	left_output = left * volume;
+	right_output = right * volume;
 }
 
 void HrtfXapoEffect::Process(UINT32 InputProcessParameterCount, const XAPO_PROCESS_BUFFER_PARAMETERS * pInputProcessParameters, UINT32 OutputProcessParameterCount, XAPO_PROCESS_BUFFER_PARAMETERS * pOutputProcessParameters, BOOL IsEnabled)
@@ -142,8 +183,10 @@ void HrtfXapoEffect::Process(UINT32 InputProcessParameterCount, const XAPO_PROCE
 
 	auto params = reinterpret_cast<const HrtfXapoParam *>(BeginProcess());
 
-	if (IsEnabled)
+	if (IsEnabled && m_hrtf_data->has_sample_rate(m_input_format.nSamplesPerSec))
 	{
+		m_hrtf_data->GetDirectionData(m_input_format.nSamplesPerSec, params->elevation, params->azimuth, m_hrtf_data_left, m_hrtf_data_right);
+
 		if (is_input_valid)
 		{
 			pOutputProcessParameters[0].BufferFlags = XAPO_BUFFER_VALID;
@@ -151,7 +194,7 @@ void HrtfXapoEffect::Process(UINT32 InputProcessParameterCount, const XAPO_PROCE
 
 			process_valid_buffer(pInput, pOutput, input_frame_count, *params);
 		}
-		else if (is_charged())
+		else if (has_history())
 		{
 			UINT32 valid_frames_counter;
 			process_invalid_buffer(pOutput, frames_to_write_count, valid_frames_counter, *params);
@@ -174,7 +217,7 @@ void HrtfXapoEffect::Process(UINT32 InputProcessParameterCount, const XAPO_PROCE
 	EndProcess();
 }
 
-bool HrtfXapoEffect::is_charged() const
+bool HrtfXapoEffect::has_history() const
 {
-	return std::abs(m_charge[0]) > 0.001 && std::abs(m_charge[1]) > 0.001;
+	return m_invalid_buffers_count < m_buffers_per_history;
 }

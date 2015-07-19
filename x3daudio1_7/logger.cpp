@@ -3,10 +3,13 @@
 #include <fstream>
 #include <memory>
 
+#define ENABLE_LOG 0
+
 std::unique_ptr<std::wostream> stream;
 
-void logger::log(std::wstring message)
+void logger::log(const std::wstring & message)
 {
+#if ENABLE_LOG
 	if (!stream)
 	{
 		stream = std::unique_ptr<std::wostream>(new std::wofstream("log.txt"));
@@ -14,4 +17,5 @@ void logger::log(std::wstring message)
 
 	*stream << message << std::endl << std::flush;
 	stream->flush();
+#endif
 }

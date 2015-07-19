@@ -1,3 +1,4 @@
+#include "stdafx.h"
 #include "HrtfData.h"
 #include "Endianness.h"
 #include <algorithm>
@@ -62,6 +63,7 @@ HrtfData::HrtfData(std::istream & stream)
 		}
 	}
 
+	delay_t longest_delay = 0;
 	for (auto& elevation : elevations)
 	{
 		for (auto& azimuth : elevation.azimuths)
@@ -69,33 +71,36 @@ HrtfData::HrtfData(std::istream & stream)
 			delay_t delay;
 			read_stream(stream, delay);
 			azimuth.delay = delay;
+			longest_delay = std::max(longest_delay, delay);
 		}
 	}
 
 	m_elevations = std::move(elevations);
 	m_response_length = impulse_response_length;
 	m_sample_rate = sample_rate;
+	m_longest_delay = longest_delay;
 }
 
 void HrtfData::GetDirectionData(angle_t elevation, angle_t azimuth, DirectionData& ref_data) const
 {
 	_ASSERT(elevation >= -angle_t(pi * 0.5));
 	_ASSERT(elevation <= angle_t(pi * 0.5));
-	_ASSERT(azimuth >= 0.0);
+	_ASSERT(azimuth >= -angle_t(2.0 * pi));
+	_ASSERT(azimuth <= angle_t(2.0 * pi));
 
-	const float azimuth_mod = std::fmod(azimuth, angle_t(pi * 2.0));
+	const float azimuth_mod = std::fmod(azimuth + angle_t(pi * 2.0), angle_t(pi * 2.0));
 
 	const angle_t elevation_scaled = (elevation + angle_t(pi * 0.5)) * (m_elevations.size() - 1) / angle_t(pi);
 	const size_t elevation_index0 = static_cast<size_t>(elevation_scaled);
 	const size_t elevation_index1 = std::min(elevation_index0 + 1, m_elevations.size() - 1);
 	const float elevation_fractional_part = elevation_scaled - std::floor(elevation_scaled);
 
-	const angle_t azimuth_scaled0 = (azimuth_mod + 2 * angle_t(pi)) * m_elevations[elevation_index0].azimuths.size() / angle_t(2 * pi);
+	const angle_t azimuth_scaled0 = azimuth_mod * m_elevations[elevation_index0].azimuths.size() / angle_t(2 * pi);
 	const size_t azimuth_index00 = static_cast<size_t>(azimuth_scaled0) % m_elevations[elevation_index0].azimuths.size();
 	const size_t azimuth_index01 = static_cast<size_t>(azimuth_scaled0 + 1) % m_elevations[elevation_index0].azimuths.size();
 	const float azimuth_fractional_part0 = azimuth_scaled0 - std::floor(azimuth_scaled0);
 
-	const angle_t azimuth_scaled1 = (azimuth_mod + 2 * angle_t(pi)) * m_elevations[elevation_index1].azimuths.size() / angle_t(2 * pi);
+	const angle_t azimuth_scaled1 = azimuth_mod * m_elevations[elevation_index1].azimuths.size() / angle_t(2 * pi);
 	const size_t azimuth_index10 = static_cast<size_t>(azimuth_scaled1) % m_elevations[elevation_index1].azimuths.size();
 	const size_t azimuth_index11 = static_cast<size_t>(azimuth_scaled1 + 1) % m_elevations[elevation_index1].azimuths.size();
 	const float azimuth_fractional_part1 = azimuth_scaled1 - std::floor(azimuth_scaled1);
@@ -130,9 +135,9 @@ void HrtfData::GetDirectionData(angle_t elevation, angle_t azimuth, DirectionDat
 {
 	_ASSERT(elevation >= -angle_t(pi * 0.5));
 	_ASSERT(elevation <= angle_t(pi * 0.5));
-	_ASSERT(azimuth >= 0.0);
-	_ASSERT(azimuth < angle_t(pi * 2.0));
+	_ASSERT(azimuth >= -angle_t(2.0 * pi));
+	_ASSERT(azimuth <= angle_t(2.0 * pi));
 
 	GetDirectionData(elevation, azimuth, ref_data_left);
-	GetDirectionData(elevation, angle_t(2 * pi) - azimuth, ref_data_right);
+	GetDirectionData(elevation, -azimuth, ref_data_right);
 }

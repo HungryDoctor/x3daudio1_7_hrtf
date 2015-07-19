@@ -52,6 +52,10 @@ HRESULT XAudio2VoiceProxy::SetOutputVoices(const XAUDIO2_VOICE_SENDS * pSendList
 
 	auto result = m_original->SetOutputVoices(pSendList ? &originalSendList : 0);
 
+	// we must disable effect since matrix is changed to a default one.
+	if (has_hrtf_effect())
+		m_original->DisableEffect(m_hrtf_effect_index, 0);
+
 	m_voice_mapper->CleanupSends(originalSendList);
 
 	return result;
@@ -101,12 +105,14 @@ HRESULT XAudio2VoiceProxy::GetEffectParameters(UINT32 EffectIndex, void * pParam
 
 HRESULT XAudio2VoiceProxy::SetFilterParameters(const XAUDIO2_FILTER_PARAMETERS * pParameters, UINT32 OperationSet)
 {
-	return m_original->SetFilterParameters(pParameters, OperationSet);
+	// Filter is disabled because HRTF is cooler!
+	return S_OK;
+	//return m_original->SetFilterParameters(pParameters, OperationSet);
 }
 
 void XAudio2VoiceProxy::GetFilterParameters(XAUDIO2_FILTER_PARAMETERS * pParameters)
 {
-	m_original->GetFilterParameters(pParameters);
+	//m_original->GetFilterParameters(pParameters);
 }
 
 HRESULT XAudio2VoiceProxy::SetOutputFilterParameters(IXAudio2Voice * pDestinationVoice, const XAUDIO2_FILTER_PARAMETERS * pParameters, UINT32 OperationSet)
@@ -163,6 +169,10 @@ HRESULT XAudio2VoiceProxy::SetOutputMatrix(IXAudio2Voice * pDestinationVoice, UI
 			HrtfXapoParam params;
 			params.source_to_emitter_transformed = sound3d.relative_position;
 			params.volume_multiplier = sound3d.volume_multiplier;
+			params.elevation = sound3d.elevation;
+			params.azimuth = sound3d.azimuth;
+			params.voice = m_id;
+			params.sound_id = id;
 
 			m_original->SetEffectParameters(m_hrtf_effect_index, &params, sizeof(params), OperationSet);
 
@@ -176,11 +186,16 @@ HRESULT XAudio2VoiceProxy::SetOutputMatrix(IXAudio2Voice * pDestinationVoice, UI
 	}
 	else
 	{
+		logger::log(m_type_name, "::SetOutputMatrix ", m_id, " Has Not-NaN and DestinationChannels=", DestinationChannels, " m_output_channels=", m_output_channels, " SourceChannels=", SourceChannels);
 		m_original->DisableEffect(m_hrtf_effect_index, OperationSet);
 
 		if (SourceChannels == 1)
 		{
-			float matrix[XAUDIO2_MAX_AUDIO_CHANNELS] = { 0 };
+			HrtfXapoParam params = { 0 };
+
+			m_original->SetEffectParameters(m_hrtf_effect_index, &params, sizeof(params), OperationSet);
+
+			float matrix[XAUDIO2_MAX_AUDIO_CHANNELS * 2] = { 0 };
 			for (UINT32 i = 0; i < DestinationChannels; i++)
 			{
 				matrix[i * 2] = matrix[i * 2 + 1] = pLevelMatrix[i];

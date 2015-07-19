@@ -28,9 +28,11 @@ public:
 
 	uint32_t get_sample_rate() const { return m_sample_rate; }
 	uint32_t get_respoone_length() const { return m_response_length; }
+	uint32_t get_longest_delay() const { return m_longest_delay; }
 
 private:
 	uint32_t m_sample_rate;
 	uint32_t m_response_length;
+	uint32_t m_longest_delay;
 	std::vector<ElevationData> m_elevations;
 };

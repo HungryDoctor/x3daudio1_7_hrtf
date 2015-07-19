@@ -8,11 +8,17 @@
 #include "util.h"
 #include "logger.h"
 
-//#define DUMP_SOUND_WAV
+#include <chrono>
+#include <ctime>
+#include <iomanip>
+
+#define DUMP_SOUND_WAV 0
 
 std::wstring GetName(const XAudio2SourceVoiceProxy * ptr)
 {
 	std::wstringstream ss;
+	auto result = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+	ss << std::put_time(std::localtime(&result), L"%H-%M-%S") << L"_";
 	ss << ptr;
 	return ss.str();
 }
@@ -25,7 +31,7 @@ XAudio2SourceVoiceProxy::XAudio2SourceVoiceProxy(IXAudio2 * original_xaudio, ISo
 	  , m_on_destroy(on_destroy)
 {
 	std::wstringstream ss;
-	ss << "XAudio2SourceVoiceProxy::ctor FormatChannels=" << pSourceFormat->nChannels << " FormatSampleRate=" << pSourceFormat->nSamplesPerSec << " MaxFrequencyRatio=" << MaxFrequencyRatio << " Effects=" << (pEffectChain ? std::to_wstring(pEffectChain->EffectCount) : L"nullptr") << " ";
+	ss << "XAudio2SourceVoiceProxy::ctor FormatChannels=" << pSourceFormat->nChannels << " FormatSampleRate=" << pSourceFormat->nSamplesPerSec << " MaxFrequencyRatio=" << MaxFrequencyRatio << " Effects=" << (pEffectChain ? std::to_wstring(pEffectChain->EffectCount) : L"nullptr") << " Flags=" << Flags << " ";
 	print_sends(ss, pSendList);
 	logger::log(ss.str());
 
@@ -54,9 +60,11 @@ XAudio2SourceVoiceProxy::XAudio2SourceVoiceProxy(IXAudio2 * original_xaudio, ISo
 	chain.EffectCount = effect_count + 1;
 	chain.pEffectDescriptors = apoDesc;
 
+	const auto adjusted_flags = Flags & ~XAUDIO2_VOICE_USEFILTER;
+
 	IXAudio2SourceVoice * original_voice = nullptr;
 	HRESULT result;
-	if (SUCCEEDED(result = original_xaudio->CreateSourceVoice(&original_voice, pSourceFormat, Flags, MaxFrequencyRatio, pCallback, pSendList ? &originalSendList : 0, &chain)))
+	if (SUCCEEDED(result = original_xaudio->CreateSourceVoice(&original_voice, pSourceFormat, adjusted_flags, MaxFrequencyRatio, pCallback, pSendList ? &originalSendList : 0, &chain)))
 	{
 		m_original = original_voice;
 		m_impl.reset(new XAudio2VoiceProxy(L"XAudio2SourceVoiceProxy", m_sound3d_registry, m_voice_mapper, m_original, pSourceFormat->nChannels, this, effect_count));
@@ -66,11 +74,11 @@ XAudio2SourceVoiceProxy::XAudio2SourceVoiceProxy(IXAudio2 * original_xaudio, ISo
 	apo->Release();
 	m_voice_mapper->CleanupSends(originalSendList);
 
-#ifdef DUMP_SOUND_WAV
-	XAUDIO2_VOICE_DETAILS details;
-	original->GetVoiceDetails(&details);
-	m_wave_file.reset(new WaveFile(std::wstring(L"wavs\\") + std::to_wstring(input_channels) + L"_" + GetName(this) + L".wav", details.InputChannels, details.InputSampleRate, 16));
-#endif
+//#if DUMP_SOUND_WAV
+//	XAUDIO2_VOICE_DETAILS details;
+//	original->GetVoiceDetails(&details);
+//	m_wave_file.reset(new WaveFile(std::wstring(L"wavs\\") + std::to_wstring(input_channels) + L"_" + GetName(this) + L".wav", details.InputChannels, details.InputSampleRate, 16));
+//#endif
 }
 
 XAudio2SourceVoiceProxy::~XAudio2SourceVoiceProxy()
@@ -90,8 +98,12 @@ HRESULT XAudio2SourceVoiceProxy::Stop(UINT32 Flags, UINT32 OperationSet)
 
 HRESULT XAudio2SourceVoiceProxy::SubmitSourceBuffer(const XAUDIO2_BUFFER * pBuffer, const XAUDIO2_BUFFER_WMA * pBufferWMA)
 {
-#ifdef DUMP_SOUND_WAV
+#if DUMP_SOUND_WAV
+	XAUDIO2_VOICE_DETAILS details;
+	m_original->GetVoiceDetails(&details);
+	m_wave_file.reset(new WaveFile(std::wstring(L"wavs\\") + std::to_wstring(details.InputChannels) + L"_" + GetName(this) + L".wav", details.InputChannels, details.InputSampleRate, 16));
 	m_wave_file->AppendData(pBuffer->pAudioData, pBuffer->AudioBytes);
+	m_wave_file.reset();
 #endif
 	return m_original->SubmitSourceBuffer(pBuffer, pBufferWMA);
 }
