@@ -5,7 +5,6 @@
 struct Sound3DEntry
 {
 	float volume_multiplier;
-	math::vector3f relative_position;
 	float elevation;
 	float azimuth;
 };

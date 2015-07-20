@@ -15,7 +15,7 @@ public:
 	virtual void Clear() override;
 
 private:
-	sound_id m_id_counter;
+	short m_id_counter;
 	std::unordered_map<sound_id, Sound3DEntry> m_registry;
 	mutable std::mutex m_mutex;
 

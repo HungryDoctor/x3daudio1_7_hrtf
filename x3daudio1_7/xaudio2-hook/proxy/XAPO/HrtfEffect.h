@@ -14,16 +14,10 @@
 struct HrtfXapoParam
 {
 	float volume_multiplier;
-	// source to emitter vector in listener's local space. Z is front, Y is Up, and X is left
-	math::vector3 source_to_emitter_transformed;
 	// elevation, in listener's local space, in radians in the range [-pi/2; +pi/2]
 	float elevation;
 	// azimuth, in listener's local space, in radians in the range [-2pi; +2pi]
 	float azimuth;
-
-	// for debug purposes :
-	const void * voice;
-	int sound_id;
 };
 
 

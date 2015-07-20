@@ -22,8 +22,6 @@ X3DAudioProxy::~X3DAudioProxy()
 
 void X3DAudioProxy::X3DAudioCalculate(const X3DAUDIO_LISTENER * pListener, const X3DAUDIO_EMITTER * pEmitter, UINT32 Flags, X3DAUDIO_DSP_SETTINGS * pDSPSettings)
 {
-	//logger::log("X3DAudioProxy::X3DAudioCalculate");
-
 	m_original.X3DAudioCalculate(m_handle, pListener, pEmitter, Flags, pDSPSettings);
 
 	// changing left-hand to ortodox right-hand
@@ -41,11 +39,11 @@ void X3DAudioProxy::X3DAudioCalculate(const X3DAUDIO_LISTENER * pListener, const
 
 	Sound3DEntry entry;
 
-	entry.relative_position = world_to_listener_matrix * listener_to_emitter;
+	auto relative_position = world_to_listener_matrix * listener_to_emitter;
 	entry.volume_multiplier = sample_volume_curve(pEmitter, math::length(listener_to_emitter));
 
-	entry.azimuth = std::atan2(entry.relative_position[0], entry.relative_position[2]);
-	entry.elevation = std::asin(math::normalize(entry.relative_position)[1]);
+	entry.azimuth = std::atan2(relative_position[0], relative_position[2]);
+	entry.elevation = std::asin(math::normalize(relative_position)[1]);
 
 	auto id = m_registry->CreateEntry(entry);
 

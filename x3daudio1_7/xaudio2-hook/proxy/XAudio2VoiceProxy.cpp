@@ -160,19 +160,15 @@ HRESULT XAudio2VoiceProxy::SetOutputMatrix(IXAudio2Voice * pDestinationVoice, UI
 	{
 		if (DestinationChannels == 2)
 		{
-			//if (m_input_channels == 2)
 			m_original->EnableEffect(m_hrtf_effect_index, OperationSet);
 
 			auto & id = *reinterpret_cast<const sound_id*>(&pLevelMatrix[1]);
 			auto sound3d = m_sound3d_registry->GetEntry(id);
 
 			HrtfXapoParam params;
-			params.source_to_emitter_transformed = sound3d.relative_position;
 			params.volume_multiplier = sound3d.volume_multiplier;
 			params.elevation = sound3d.elevation;
 			params.azimuth = sound3d.azimuth;
-			params.voice = m_id;
-			params.sound_id = id;
 
 			m_original->SetEffectParameters(m_hrtf_effect_index, &params, sizeof(params), OperationSet);
 

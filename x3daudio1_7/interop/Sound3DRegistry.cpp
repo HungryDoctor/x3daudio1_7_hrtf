@@ -11,7 +11,7 @@ Sound3DRegistry& Sound3DRegistry::GetInstance()
 sound_id Sound3DRegistry::CreateEntry(const Sound3DEntry & entry)
 {
 	std::lock_guard<std::mutex> lock_guard(m_mutex);
-	m_registry.insert(std::make_pair(m_id_counter, entry));
+	m_registry.insert_or_assign(m_id_counter, entry);
 	return m_id_counter++;
 }
 
