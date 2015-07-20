@@ -12,6 +12,9 @@
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 
+
+DEFINE_CLSID(XAudio2_6, 3eda9b49, 2085, 498b, 9b, b2, 39, a6, 77, 84, 93, de);
+
 //////////////////////////////////////////////////////////////////////////
 
 namespace Hook
@@ -51,13 +54,17 @@ const size_t g_FunctionsCount = sizeof(g_Functions) / sizeof(FunctionInfo);
 
 HRESULT WINAPI Hook::CoCreateInstance(REFCLSID rclsid, LPUNKNOWN pUnkOuter, DWORD dwClsContext, REFIID riid, LPVOID * ppv)
 {
-	if (rclsid == __uuidof(XAudio2))
+	if (rclsid == __uuidof(XAudio2) || rclsid == __uuidof(XAudio2_6))
 	{
 		if (pUnkOuter)
 			return CLASS_E_NOAGGREGATION;
 
 		ATL::CComPtr<IUnknown> originalObject;
+#if defined(_DEBUG)
 		HRESULT hr = Original::CoCreateInstance(__uuidof(XAudio2_Debug), pUnkOuter, dwClsContext, riid, reinterpret_cast<void**>(&originalObject));
+#else
+		HRESULT hr = Original::CoCreateInstance(__uuidof(XAudio2), pUnkOuter, dwClsContext, riid, reinterpret_cast<void**>(&originalObject));
+#endif
 		if (FAILED(hr))
 			return hr;
 
