@@ -3,7 +3,7 @@
 #include <fstream>
 #include <memory>
 
-#define ENABLE_LOG 0
+#define ENABLE_LOG _DEBUG
 
 std::unique_ptr<std::wostream> stream;
 

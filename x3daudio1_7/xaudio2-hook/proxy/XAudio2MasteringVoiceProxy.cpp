@@ -17,12 +17,15 @@ XAudio2MasteringVoiceProxy::XAudio2MasteringVoiceProxy(IXAudio2 * original_xaudi
 
 	IXAudio2MasteringVoice * original_voice = nullptr;
 	HRESULT result;
-	if (SUCCEEDED(result = original_xaudio->CreateMasteringVoice(&original_voice, InputChannels, InputSampleRate, Flags, DeviceIndex, pEffectChain)))
+
+	// We force TWO channels (to deal with such games as Skyrim, as it always specifies six channels).
+	if (SUCCEEDED(result = original_xaudio->CreateMasteringVoice(&original_voice, 2, InputSampleRate, Flags, DeviceIndex, pEffectChain)))
 	{
 		m_original = original_voice;
 		m_impl.reset(new XAudio2VoiceProxy(L"XAudio2MasteringVoiceProxy", m_voice_mapper, m_original, this));
 		m_voice_mapper->RememberMap(original_voice, this);
-		logger::log("IXAudio2::CreateSubmixVoice succeeded ", this);
+		m_voice_mapper->RememberMasteringVoice(this);
+		logger::log("IXAudio2::CreateMasteringVoice succeeded ", this);
 	}
 }
 
@@ -84,12 +87,12 @@ void XAudio2MasteringVoiceProxy::GetFilterParameters(XAUDIO2_FILTER_PARAMETERS *
 
 HRESULT XAudio2MasteringVoiceProxy::SetOutputFilterParameters(IXAudio2Voice * pDestinationVoice, const XAUDIO2_FILTER_PARAMETERS * pParameters, UINT32 OperationSet)
 {
-	return m_impl->SetOutputFilterParameters(m_voice_mapper->MapVoiceToOriginal(pDestinationVoice), pParameters, OperationSet);
+	return m_impl->SetOutputFilterParameters(pDestinationVoice, pParameters, OperationSet);
 }
 
 void XAudio2MasteringVoiceProxy::GetOutputFilterParameters(IXAudio2Voice * pDestinationVoice, XAUDIO2_FILTER_PARAMETERS * pParameters)
 {
-	m_impl->GetOutputFilterParameters(m_voice_mapper->MapVoiceToOriginal(pDestinationVoice), pParameters);
+	m_impl->GetOutputFilterParameters(pDestinationVoice, pParameters);
 }
 
 HRESULT XAudio2MasteringVoiceProxy::SetVolume(float Volume, UINT32 OperationSet)
@@ -114,12 +117,12 @@ void XAudio2MasteringVoiceProxy::GetChannelVolumes(UINT32 Channels, float * pVol
 
 HRESULT XAudio2MasteringVoiceProxy::SetOutputMatrix(IXAudio2Voice * pDestinationVoice, UINT32 SourceChannels, UINT32 DestinationChannels, const float * pLevelMatrix, UINT32 OperationSet)
 {
-	return m_original->SetOutputMatrix(m_voice_mapper->MapVoiceToOriginal(pDestinationVoice), SourceChannels, DestinationChannels, pLevelMatrix, OperationSet);
+	return m_original->SetOutputMatrix(pDestinationVoice, SourceChannels, DestinationChannels, pLevelMatrix, OperationSet);
 }
 
 void XAudio2MasteringVoiceProxy::GetOutputMatrix(IXAudio2Voice * pDestinationVoice, UINT32 SourceChannels, UINT32 DestinationChannels, float * pLevelMatrix)
 {
-	m_original->GetOutputMatrix(m_voice_mapper->MapVoiceToOriginal(pDestinationVoice), SourceChannels, DestinationChannels, pLevelMatrix);
+	m_original->GetOutputMatrix(pDestinationVoice, SourceChannels, DestinationChannels, pLevelMatrix);
 }
 
 void XAudio2MasteringVoiceProxy::DestroyVoice()

@@ -4,12 +4,18 @@
 #include <algorithm>
 
 VoiceMapper::VoiceMapper()
+	: m_mastering_voice(nullptr)
 {
 }
 
 
 VoiceMapper::~VoiceMapper()
 {
+}
+
+void VoiceMapper::RememberMasteringVoice(IXAudio2MasteringVoice* original)
+{
+	m_mastering_voice = original;
 }
 
 void VoiceMapper::RememberMap(IXAudio2Voice * original, IXAudio2Voice * proxy)
@@ -30,6 +36,11 @@ void VoiceMapper::ForgetMapByOriginal(IXAudio2Voice * original)
 void VoiceMapper::ForgetMapByProxy(IXAudio2Voice * proxy)
 {
 	m_map.erase(proxy);
+}
+
+IXAudio2MasteringVoice* VoiceMapper::GetMasteringVoice() const
+{
+	return m_mastering_voice;
 }
 
 void VoiceMapper::MapSendsToOriginal(const XAUDIO2_VOICE_SENDS & proxy_sends, XAUDIO2_VOICE_SENDS & original_sends) const

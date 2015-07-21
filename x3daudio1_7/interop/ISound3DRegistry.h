@@ -4,9 +4,9 @@
 
 struct Sound3DEntry
 {
-	float volume_multiplier;
-	float elevation;
-	float azimuth;
+	float volume_multiplier = 0.0f;
+	float elevation = 0.0f;
+	float azimuth = 0.0f;
 };
 
 typedef int sound_id;

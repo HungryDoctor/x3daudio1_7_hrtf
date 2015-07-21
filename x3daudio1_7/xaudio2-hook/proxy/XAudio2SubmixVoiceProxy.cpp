@@ -26,7 +26,7 @@ XAudio2SubmixVoiceProxy::XAudio2SubmixVoiceProxy(IXAudio2 * original_xaudio, ISo
 	if (pSendList)
 		m_voice_mapper->MapSendsToOriginal(*pSendList, originalSendList);
 
-	UINT32 effect_count = (pEffectChain != nullptr) ? pEffectChain->EffectCount : 0;
+	UINT32 effect_count = 0; // (pEffectChain != nullptr) ? pEffectChain->EffectCount : 0;
 	_ASSERT(effect_count < 64);
 
 	XAUDIO2_EFFECT_DESCRIPTOR apoDesc[64];
@@ -54,7 +54,7 @@ XAudio2SubmixVoiceProxy::XAudio2SubmixVoiceProxy(IXAudio2 * original_xaudio, ISo
 	if (SUCCEEDED(result = original_xaudio->CreateSubmixVoice(&original_voice, InputChannels, InputSampleRate, adjusted_flags, ProcessingStage, pSendList ? &originalSendList : 0, &chain)))
 	{
 		m_original = original_voice;
-		m_impl.reset(new XAudio2VoiceProxy(L"XAudio2SubmixVoiceProxy", m_sound3d_registry, m_voice_mapper, m_original, InputChannels, this, effect_count));
+		m_impl.reset(new XAudio2VoiceProxy(L"XAudio2SubmixVoiceProxy", m_sound3d_registry, m_voice_mapper, m_original, InputChannels, this, effect_count, pSendList));
 		m_voice_mapper->RememberMap(original_voice, this);
 		logger::log("IXAudio2::CreateSubmixVoice succeeded ", this);
 	}
@@ -119,12 +119,12 @@ void XAudio2SubmixVoiceProxy::GetFilterParameters(XAUDIO2_FILTER_PARAMETERS * pP
 
 HRESULT XAudio2SubmixVoiceProxy::SetOutputFilterParameters(IXAudio2Voice * pDestinationVoice, const XAUDIO2_FILTER_PARAMETERS * pParameters, UINT32 OperationSet)
 {
-	return m_impl->SetOutputFilterParameters(m_voice_mapper->MapVoiceToOriginal(pDestinationVoice), pParameters, OperationSet);
+	return m_impl->SetOutputFilterParameters(pDestinationVoice, pParameters, OperationSet);
 }
 
 void XAudio2SubmixVoiceProxy::GetOutputFilterParameters(IXAudio2Voice * pDestinationVoice, XAUDIO2_FILTER_PARAMETERS * pParameters)
 {
-	m_impl->GetOutputFilterParameters(m_voice_mapper->MapVoiceToOriginal(pDestinationVoice), pParameters);
+	m_impl->GetOutputFilterParameters(pDestinationVoice, pParameters);
 }
 
 HRESULT XAudio2SubmixVoiceProxy::SetVolume(float Volume, UINT32 OperationSet)
@@ -153,12 +153,12 @@ HRESULT XAudio2SubmixVoiceProxy::SetOutputMatrix(IXAudio2Voice * pDestinationVoi
 	{
 		//logger::log("XAudio2SubmixVoiceProxy::SetOutputMatrix NaN ", this);
 	}
-	return m_impl->SetOutputMatrix(m_voice_mapper->MapVoiceToOriginal(pDestinationVoice), SourceChannels, DestinationChannels, pLevelMatrix, OperationSet);
+	return m_impl->SetOutputMatrix(pDestinationVoice, SourceChannels, DestinationChannels, pLevelMatrix, OperationSet);
 }
 
 void XAudio2SubmixVoiceProxy::GetOutputMatrix(IXAudio2Voice * pDestinationVoice, UINT32 SourceChannels, UINT32 DestinationChannels, float * pLevelMatrix)
 {
-	m_impl->GetOutputMatrix(m_voice_mapper->MapVoiceToOriginal(pDestinationVoice), SourceChannels, DestinationChannels, pLevelMatrix);
+	m_impl->GetOutputMatrix(pDestinationVoice, SourceChannels, DestinationChannels, pLevelMatrix);
 }
 
 void XAudio2SubmixVoiceProxy::DestroyVoice()

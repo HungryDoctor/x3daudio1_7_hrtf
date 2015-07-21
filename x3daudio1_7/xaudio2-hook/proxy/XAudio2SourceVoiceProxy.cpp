@@ -39,7 +39,7 @@ XAudio2SourceVoiceProxy::XAudio2SourceVoiceProxy(IXAudio2 * original_xaudio, ISo
 	if (pSendList)
 		m_voice_mapper->MapSendsToOriginal(*pSendList, originalSendList);
 
-	UINT32 effect_count = (pEffectChain != nullptr) ? pEffectChain->EffectCount : 0;
+	UINT32 effect_count = 0; // (pEffectChain != nullptr) ? pEffectChain->EffectCount : 0;
 	_ASSERT(effect_count < 64);
 
 	XAUDIO2_EFFECT_DESCRIPTOR apoDesc[64];
@@ -67,7 +67,7 @@ XAudio2SourceVoiceProxy::XAudio2SourceVoiceProxy(IXAudio2 * original_xaudio, ISo
 	if (SUCCEEDED(result = original_xaudio->CreateSourceVoice(&original_voice, pSourceFormat, adjusted_flags, MaxFrequencyRatio, pCallback, pSendList ? &originalSendList : 0, &chain)))
 	{
 		m_original = original_voice;
-		m_impl.reset(new XAudio2VoiceProxy(L"XAudio2SourceVoiceProxy", m_sound3d_registry, m_voice_mapper, m_original, pSourceFormat->nChannels, this, effect_count));
+		m_impl.reset(new XAudio2VoiceProxy(L"XAudio2SourceVoiceProxy", m_sound3d_registry, m_voice_mapper, m_original, pSourceFormat->nChannels, this, effect_count, pSendList));
 		m_voice_mapper->RememberMap(original_voice, this);
 		logger::log("IXAudio2::CreateSourceVoice succeeded ", this);
 	}
@@ -199,12 +199,12 @@ void XAudio2SourceVoiceProxy::GetFilterParameters(XAUDIO2_FILTER_PARAMETERS * pP
 
 HRESULT XAudio2SourceVoiceProxy::SetOutputFilterParameters(IXAudio2Voice * pDestinationVoice, const XAUDIO2_FILTER_PARAMETERS * pParameters, UINT32 OperationSet)
 {
-	return m_impl->SetOutputFilterParameters(m_voice_mapper->MapVoiceToOriginal(pDestinationVoice), pParameters, OperationSet);
+	return m_impl->SetOutputFilterParameters(pDestinationVoice, pParameters, OperationSet);
 }
 
 void XAudio2SourceVoiceProxy::GetOutputFilterParameters(IXAudio2Voice * pDestinationVoice, XAUDIO2_FILTER_PARAMETERS * pParameters)
 {
-	m_impl->GetOutputFilterParameters(m_voice_mapper->MapVoiceToOriginal(pDestinationVoice), pParameters);
+	m_impl->GetOutputFilterParameters(pDestinationVoice, pParameters);
 }
 
 HRESULT XAudio2SourceVoiceProxy::SetVolume(float Volume, UINT32 OperationSet)
@@ -229,12 +229,12 @@ void XAudio2SourceVoiceProxy::GetChannelVolumes(UINT32 Channels, float * pVolume
 
 HRESULT XAudio2SourceVoiceProxy::SetOutputMatrix(IXAudio2Voice * pDestinationVoice, UINT32 SourceChannels, UINT32 DestinationChannels, const float * pLevelMatrix, UINT32 OperationSet)
 {
-	return m_impl->SetOutputMatrix(m_voice_mapper->MapVoiceToOriginal(pDestinationVoice), SourceChannels, DestinationChannels, pLevelMatrix, OperationSet);
+	return m_impl->SetOutputMatrix(pDestinationVoice, SourceChannels, DestinationChannels, pLevelMatrix, OperationSet);
 }
 
 void XAudio2SourceVoiceProxy::GetOutputMatrix(IXAudio2Voice * pDestinationVoice, UINT32 SourceChannels, UINT32 DestinationChannels, float * pLevelMatrix)
 {
-	m_impl->GetOutputMatrix(m_voice_mapper->MapVoiceToOriginal(pDestinationVoice), SourceChannels, DestinationChannels, pLevelMatrix);
+	m_impl->GetOutputMatrix(pDestinationVoice, SourceChannels, DestinationChannels, pLevelMatrix);
 }
 
 void XAudio2SourceVoiceProxy::DestroyVoice()

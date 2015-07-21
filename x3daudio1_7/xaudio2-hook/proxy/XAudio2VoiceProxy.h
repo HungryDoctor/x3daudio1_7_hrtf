@@ -11,7 +11,7 @@ class XAudio2VoiceProxy
 {
 public:
 	XAudio2VoiceProxy(const std::wstring & type_name, const IVoiceMapper * voice_mapper, IXAudio2Voice * original, const void * id);
-	XAudio2VoiceProxy(const std::wstring & type_name, ISound3DRegistry * sound3d_registry, const IVoiceMapper * voice_mapper, IXAudio2Voice * original, UINT32 input_channels, const void * id, UINT32 hrtf_effect_index);
+	XAudio2VoiceProxy(const std::wstring & type_name, ISound3DRegistry * sound3d_registry, const IVoiceMapper * voice_mapper, IXAudio2Voice * original, UINT32 input_channels, const void * id, UINT32 hrtf_effect_index, const XAUDIO2_VOICE_SENDS * pSendList);
 
 public:
 	// Inherited via IXAudio2SubmixVoice
@@ -48,6 +48,9 @@ private:
 	UINT32 m_hrtf_effect_index;
 	const bool m_is_master;
 
+	std::vector<IXAudio2Voice*> m_sends;
+
+	void RememberSends(const XAUDIO2_VOICE_SENDS* pSendList);
 
 	XAudio2VoiceProxy(const XAudio2VoiceProxy &) = delete;
 	XAudio2VoiceProxy& operator=(const XAudio2VoiceProxy &) = delete;
