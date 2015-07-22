@@ -12,7 +12,12 @@
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 
-
+DEFINE_CLSID(XAudio2_0, fac23f48, 31f5, 45a8, b4, 9b, 52, 25, d6, 14, 01, aa);
+DEFINE_CLSID(XAudio2_1, e21a7345, eb21, 468e, be, 50, 80, 4d, b9, 7c, f7, 08);
+DEFINE_CLSID(XAudio2_2, b802058a, 464a, 42db, bc, 10, b6, 50, d6, f2, 58, 6a);
+DEFINE_CLSID(XAudio2_3, 4c5e637a, 16c7, 4de3, 9c, 46, 5e, d2, 21, 81, 96, 2d);
+DEFINE_CLSID(XAudio2_4, 03219e78, 5bc3, 44d1, b9, 2e, f6, 3d, 89, cc, 65, 26);
+DEFINE_CLSID(XAudio2_5, 4c9b6dde, 6809, 46e6, a2, 78, 9b, 6a, 97, 58, 86, 70);
 DEFINE_CLSID(XAudio2_6, 3eda9b49, 2085, 498b, 9b, b2, 39, a6, 77, 84, 93, de);
 
 //////////////////////////////////////////////////////////////////////////
@@ -54,7 +59,7 @@ const size_t g_FunctionsCount = sizeof(g_Functions) / sizeof(FunctionInfo);
 
 HRESULT WINAPI Hook::CoCreateInstance(REFCLSID rclsid, LPUNKNOWN pUnkOuter, DWORD dwClsContext, REFIID riid, LPVOID * ppv)
 {
-	if (rclsid == __uuidof(XAudio2) || rclsid == __uuidof(XAudio2_6))
+	if (rclsid == __uuidof(XAudio2) || rclsid == __uuidof(XAudio2_6) || rclsid == __uuidof(XAudio2_5) || rclsid == __uuidof(XAudio2_4) || rclsid == __uuidof(XAudio2_3) || rclsid == __uuidof(XAudio2_2) || rclsid == __uuidof(XAudio2_1) || rclsid == __uuidof(XAudio2_0))
 	{
 		if (pUnkOuter)
 			return CLASS_E_NOAGGREGATION;
