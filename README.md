@@ -1,4 +1,4 @@
-# x3daudio1_7_hrtf
+# X3DAudio HRTF
 ## HRTF for Arma 3, Skyrim, and potentially other titles using X3dAudio + XAudio2.
 
 ### Installation
