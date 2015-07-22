@@ -1,6 +1,9 @@
 # X3DAudio HRTF
 ## HRTF for Arma 3, Skyrim, and potentially other titles using X3dAudio + XAudio2.
 
+### Tags
+HRTF, HRIR, Binaural sound, Spatial sound, Ambisonics
+
 ### Installation
 Put x3daudio1_7.dll to a game folder where main executable is located. Ensure it is the exe of the game itself, not a launcher. Then take *.mhr files from OpenAL Soft (google for it) and put it to _Game_folder_folder\hrtf\_ (it does not exist, you should create such subfolder). Start. Enjoy!
 
