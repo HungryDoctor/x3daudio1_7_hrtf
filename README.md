@@ -9,7 +9,7 @@ Put x3daudio1_7.dll to a game folder where main executable is located. Ensure it
 
 #### Notes for developers
 ##### How it works
-Game hooks both x3daudio1_x.dll, wich is simple, and IXAduio2 COM interface, which is less trivial.
+Game hooks both x3daudio1_x.dll, which is simple, and IXAduio2 COM interface, which is less trivial.
 x3daudio proxy remembers 3d audio position into repository. To mark sound as 3d, then sets first coefficient of the mixing matrix to NaN. And the second one is set to sound ID, so we can later identificate it. We hope game is not that stupid and won't pass us 1x1 matrix.
 Then, when game calls IXAuido2Voice::SetOutputMatrix(), we check if 1st coeff == NaN which means we have to enable our XAPO DSP effect and pass parameters to it (position, etc).
 
