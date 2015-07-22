@@ -5,7 +5,7 @@
 HRTF, HRIR, Binaural sound, Spatial sound, Ambisonics
 
 ### Installation
-Put x3daudio1_7.dll to a game folder where main executable is located. Ensure it is the exe of the game itself, not a launcher. Then take *.mhr files from OpenAL Soft (google for it) and put it to _Game_folder_folder\hrtf\_ (it does not exist, you should create such subfolder). Start. Enjoy!
+Put x3daudio1_7.dll to a game folder where main executable is located. Ensure it is the exe of the game itself, not a launcher. Then take *.mhr files from OpenAL Soft (google for it) and put it to _Game_folder_folder\hrtf\_ (it does not exist, you should create such subfolder). If your game uses prior version of x3daudio, you can try to rename the dll to the one the game uses. Start. Enjoy!
 
 #### Notes for developers
 ##### How it works
