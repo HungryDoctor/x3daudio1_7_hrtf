@@ -1,34 +1,29 @@
 #pragma once
 
-#include <stdint.h>
+#include "IHrtfData.h"
+#include "HrtfTypes.h"
+#include <cstdint>
 #include <vector>
 #include <iostream>
-
-typedef float angle_t;
-
-struct DirectionData
-{
-	std::vector<float> impulse_response;
-	uint32_t delay;
-};
-
 
 struct ElevationData
 {
 	std::vector<DirectionData> azimuths;
 };
 
-class HrtfData
+class HrtfData : public IHrtfData
 {
 public:
 	HrtfData(std::istream & stream);
 
-	void GetDirectionData(angle_t elevation, angle_t azimuth, DirectionData & ref_data) const;
-	void GetDirectionData(angle_t elevation, angle_t azimuth, DirectionData & ref_data_left, DirectionData & ref_data_right) const;
+	void get_direction_data(angle_t elevation, angle_t azimuth, distance_t distance, DirectionData & ref_data) const override;
+	void get_direction_data(angle_t elevation, angle_t azimuth, distance_t distance, DirectionData & ref_data_left, DirectionData & ref_data_right) const override;
+	void sample_direction(angle_t elevation, angle_t azimuth, distance_t distance, uint32_t sample, float& value, float& delay) const override;
+	void sample_direction(angle_t elevation, angle_t azimuth, distance_t distance, uint32_t sample, float& value_left, float& delay_left, float& value_right, float& delay_right) const override;
 
-	uint32_t get_sample_rate() const { return m_sample_rate; }
-	uint32_t get_respoone_length() const { return m_response_length; }
-	uint32_t get_longest_delay() const { return m_longest_delay; }
+	uint32_t get_sample_rate() const override { return m_sample_rate; }
+	uint32_t get_respoone_length() const override { return m_response_length; }
+	uint32_t get_longest_delay() const override { return m_longest_delay; }
 
 private:
 	uint32_t m_sample_rate;

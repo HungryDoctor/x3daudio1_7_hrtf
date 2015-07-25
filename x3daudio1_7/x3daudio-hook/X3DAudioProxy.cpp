@@ -14,12 +14,6 @@ X3DAudioProxy::X3DAudioProxy(const x3daudio1_7_dll & original, ISound3DRegistry 
 }
 
 
-X3DAudioProxy::~X3DAudioProxy()
-{
-}
-
-
-
 void X3DAudioProxy::X3DAudioCalculate(const X3DAUDIO_LISTENER * pListener, const X3DAUDIO_EMITTER * pEmitter, UINT32 Flags, X3DAUDIO_DSP_SETTINGS * pDSPSettings)
 {
 	m_original.X3DAudioCalculate(m_handle, pListener, pEmitter, Flags, pDSPSettings);
@@ -40,10 +34,12 @@ void X3DAudioProxy::X3DAudioCalculate(const X3DAUDIO_LISTENER * pListener, const
 	Sound3DEntry entry;
 
 	auto relative_position = world_to_listener_matrix * listener_to_emitter;
-	entry.volume_multiplier = sample_volume_curve(pEmitter, math::length(listener_to_emitter));
+	auto distance = math::length(listener_to_emitter);
 
+	entry.volume_multiplier = sample_volume_curve(pEmitter, distance);
 	entry.azimuth = std::atan2(relative_position[0], relative_position[2]);
 	entry.elevation = std::asin(math::normalize(relative_position)[1]);
+	entry.distance = distance;
 
 	auto id = m_registry->CreateEntry(entry);
 

@@ -177,6 +177,7 @@ HRESULT XAudio2VoiceProxy::SetOutputMatrix(IXAudio2Voice * pDestinationVoice, UI
 			params.volume_multiplier = sound3d.volume_multiplier;
 			params.elevation = sound3d.elevation;
 			params.azimuth = sound3d.azimuth;
+			params.distance = sound3d.distance;
 
 			m_original->SetEffectParameters(m_hrtf_effect_index, &params, sizeof(params), OperationSet);
 

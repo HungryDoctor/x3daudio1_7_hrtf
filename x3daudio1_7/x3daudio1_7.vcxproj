@@ -94,6 +94,9 @@
     <ClInclude Include="hrtf\Endianness.h" />
     <ClInclude Include="hrtf\HrtfData.h" />
     <ClInclude Include="hrtf\HrtfDataSet.h" />
+    <ClInclude Include="hrtf\HrtfTypes.h" />
+    <ClInclude Include="hrtf\IHrtfData.h" />
+    <ClInclude Include="hrtf\IHrtfDataSet.h" />
     <ClInclude Include="interop\ISound3DRegistry.h" />
     <ClInclude Include="interop\Sound3DRegistry.h" />
     <ClInclude Include="logger.h" />

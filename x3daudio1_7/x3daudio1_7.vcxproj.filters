@@ -147,6 +147,15 @@
     <ClInclude Include="hrtf\HrtfDataSet.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="hrtf\IHrtfDataSet.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="hrtf\HrtfTypes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="hrtf\IHrtfData.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">

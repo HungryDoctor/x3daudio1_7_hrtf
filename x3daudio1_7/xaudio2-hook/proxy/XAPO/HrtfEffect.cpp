@@ -29,10 +29,10 @@ HrtfXapoEffect* HrtfXapoEffect::CreateInstance()
 	return instance;
 }
 
-HrtfXapoEffect::HrtfXapoEffect(const std::shared_ptr<HrtfDataSet> & hrtf_data) :
+HrtfXapoEffect::HrtfXapoEffect(const std::shared_ptr<IHrtfDataSet> & hrtf_data) :
 	CXAPOParametersBase(&m_regProps, reinterpret_cast<BYTE*>(m_params), sizeof(HrtfXapoParam), FALSE)
 	, m_time_per_frame(0)
-	, m_hrtf_data(hrtf_data)
+	, m_hrtf_data_set(hrtf_data)
 	, m_invalid_buffers_count(0)
 {
 	m_params[0] = { 0 };
@@ -60,15 +60,19 @@ HRESULT HrtfXapoEffect::LockForProcess(UINT32 InputLockedParameterCount, const X
 		memcpy(&m_output_format, pOutputLockedParameters[0].pFormat, sizeof(m_output_format));
 
 		m_time_per_frame = 1.0f / float(m_input_format.nSamplesPerSec);
-		if (m_hrtf_data->has_sample_rate(m_input_format.nSamplesPerSec))
+		if (m_hrtf_data_set->has_sample_rate(m_input_format.nSamplesPerSec))
 		{
-			auto data = m_hrtf_data->get_sample_rate_data(m_input_format.nSamplesPerSec);
-			m_history_size = data.get_longest_delay() + data.get_respoone_length();
+			m_hrtf_data = &m_hrtf_data_set->get_sample_rate_data(m_input_format.nSamplesPerSec);
+			m_history_size = m_hrtf_data->get_longest_delay() + m_hrtf_data->get_respoone_length();
 			m_buffers_per_history = m_history_size / (pInputLockedParameters[0].MaxFrameCount + m_history_size - 1);
 			m_invalid_buffers_count = m_buffers_per_history;
 
 			m_signal.resize(m_history_size + pInputLockedParameters[0].MaxFrameCount);
 			std::fill(std::begin(m_signal), std::begin(m_signal) + m_history_size, 0.0f);
+		}
+		else
+		{
+			m_hrtf_data = nullptr;
 		}
 	}
 	return hr;
@@ -201,9 +205,9 @@ void HrtfXapoEffect::Process(UINT32 InputProcessParameterCount, const XAPO_PROCE
 
 	auto params = reinterpret_cast<const HrtfXapoParam *>(BeginProcess());
 
-	if (IsEnabled && m_hrtf_data->has_sample_rate(m_input_format.nSamplesPerSec))
+	if (IsEnabled && m_hrtf_data != nullptr)
 	{
-		m_hrtf_data->GetDirectionData(m_input_format.nSamplesPerSec, params->elevation, params->azimuth, m_hrtf_data_left, m_hrtf_data_right);
+		m_hrtf_data->get_direction_data(params->elevation, params->azimuth, params->distance, m_hrtf_data_left, m_hrtf_data_right);
 
 		if (is_input_valid)
 		{

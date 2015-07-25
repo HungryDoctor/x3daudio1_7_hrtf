@@ -1,11 +1,11 @@
 #pragma once
 
 #include <xaudio2.h>
-#include <memory>
 #include <string>
 
 #include "interop/ISound3dRegistry.h"
 #include "IVoiceMapper.h"
+#include <vector>
 
 class XAudio2VoiceProxy
 {

@@ -13,11 +13,17 @@
 
 struct HrtfXapoParam
 {
+	// sound volume [0; 1]
 	float volume_multiplier;
+
 	// elevation, in listener's local space, in radians in the range [-pi/2; +pi/2]
 	float elevation;
+
 	// azimuth, in listener's local space, in radians in the range [-2pi; +2pi]
 	float azimuth;
+
+	// distance to the source [0; +inf]
+	float distance;
 };
 
 
@@ -27,7 +33,7 @@ public:
 	static HrtfXapoEffect* CreateInstance();
 
 public:
-	HrtfXapoEffect(const std::shared_ptr<HrtfDataSet> & hrtf_data);
+	HrtfXapoEffect(const std::shared_ptr<IHrtfDataSet> & hrtf_data);
 
 	// Inherited via CXAPOParametersBase
 	STDMETHOD(LockForProcess)(UINT32 InputLockedParameterCount, const XAPO_LOCKFORPROCESS_BUFFER_PARAMETERS * pInputLockedParameters, UINT32 OutputLockedParameterCount, const XAPO_LOCKFORPROCESS_BUFFER_PARAMETERS * pOutputLockedParameters) override;
@@ -47,7 +53,8 @@ private:
 	HrtfXapoParam m_params[3]; // ring buffer as CXAPOParametersBase requires
 	float m_time_per_frame;
 
-	std::shared_ptr<HrtfDataSet> m_hrtf_data;
+	std::shared_ptr<IHrtfDataSet> m_hrtf_data_set;
+	const IHrtfData * m_hrtf_data;
 	std::vector<float> m_signal;
 	UINT32 m_invalid_buffers_count;
 	UINT32 m_buffers_per_history;

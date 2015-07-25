@@ -13,22 +13,12 @@ HrtfDataSet::HrtfDataSet(const std::vector<std::wstring> & data_files)
 	}
 }
 
-void HrtfDataSet::GetDirectionData(uint32_t sample_rate, angle_t elevation, angle_t azimuth, DirectionData& ref_data) const
-{
-	m_data.at(sample_rate).GetDirectionData(elevation, azimuth, ref_data);
-}
-
-void HrtfDataSet::GetDirectionData(uint32_t sample_rate, angle_t elevation, angle_t azimuth, DirectionData& ref_data_left, DirectionData& ref_data_right) const
-{
-	m_data.at(sample_rate).GetDirectionData(elevation, azimuth, ref_data_left, ref_data_right);
-}
-
 bool HrtfDataSet::has_sample_rate(uint32_t sample_rate) const
 {
 	return m_data.find(sample_rate) != m_data.end();
 }
 
-const HrtfData& HrtfDataSet::get_sample_rate_data(uint32_t sampl_rate) const
+const IHrtfData & HrtfDataSet::get_sample_rate_data(uint32_t sampl_rate) const
 {
 	return m_data.at(sampl_rate);
 }

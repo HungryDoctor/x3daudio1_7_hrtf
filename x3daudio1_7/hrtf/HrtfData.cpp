@@ -3,12 +3,12 @@
 #include "Endianness.h"
 #include <algorithm>
 
-typedef uint8_t impulse_response_length_t;
-typedef uint8_t elevations_count_t;
-typedef uint8_t azimuth_count_t;
-typedef uint32_t sample_rate_t;
-typedef int16_t sample_t;
-typedef uint8_t delay_t;
+typedef uint8_t file_impulse_response_length_t;
+typedef uint8_t file_elevations_count_t;
+typedef uint8_t file_azimuth_count_t;
+typedef uint32_t file_sample_rate_t;
+typedef int16_t file_sample_t;
+typedef uint8_t file_delay_t;
 
 const double pi = 3.1415926535897932385;
 
@@ -30,9 +30,9 @@ HrtfData::HrtfData(std::istream & stream)
 		throw std::logic_error("Bad file format.");
 	}
 
-	sample_rate_t sample_rate;
-	impulse_response_length_t impulse_response_length;
-	elevations_count_t elevations_count;
+	file_sample_rate_t sample_rate;
+	file_impulse_response_length_t impulse_response_length;
+	file_elevations_count_t elevations_count;
 
 	read_stream(stream, sample_rate);
 	read_stream(stream, impulse_response_length);
@@ -40,14 +40,14 @@ HrtfData::HrtfData(std::istream & stream)
 
 	std::vector<ElevationData> elevations(elevations_count);
 
-	for (elevations_count_t i = 0; i < elevations_count; i++)
+	for (file_elevations_count_t i = 0; i < elevations_count; i++)
 	{
-		azimuth_count_t azimuth_count;
+		file_azimuth_count_t azimuth_count;
 		read_stream(stream, azimuth_count);
 		elevations[i].azimuths.resize(azimuth_count);
 	}
 
-	const float normalization_factor = 1.0f / float(1 << (sizeof(sample_t) * 8 - 1));
+	const float normalization_factor = 1.0f / float(1 << (sizeof(file_sample_t) * 8 - 1));
 
 	for (auto& elevation : elevations)
 	{
@@ -56,19 +56,19 @@ HrtfData::HrtfData(std::istream & stream)
 			azimuth.impulse_response.resize(impulse_response_length);
 			for (auto& sample : azimuth.impulse_response)
 			{
-				sample_t sample_from_file;
+				file_sample_t sample_from_file;
 				read_stream(stream, sample_from_file);
 				sample = sample_from_file * normalization_factor;
 			}
 		}
 	}
 
-	delay_t longest_delay = 0;
+	file_delay_t longest_delay = 0;
 	for (auto& elevation : elevations)
 	{
 		for (auto& azimuth : elevation.azimuths)
 		{
-			delay_t delay;
+			file_delay_t delay;
 			read_stream(stream, delay);
 			azimuth.delay = delay;
 			longest_delay = std::max(longest_delay, delay);
@@ -81,7 +81,7 @@ HrtfData::HrtfData(std::istream & stream)
 	m_longest_delay = longest_delay;
 }
 
-void HrtfData::GetDirectionData(angle_t elevation, angle_t azimuth, DirectionData& ref_data) const
+void HrtfData::get_direction_data(angle_t elevation, angle_t azimuth, distance_t distance, DirectionData& ref_data) const
 {
 	_ASSERT(elevation >= -angle_t(pi * 0.5));
 	_ASSERT(elevation <= angle_t(pi * 0.5));
@@ -106,17 +106,15 @@ void HrtfData::GetDirectionData(angle_t elevation, angle_t azimuth, DirectionDat
 	const float azimuth_fractional_part1 = azimuth_scaled1 - std::floor(azimuth_scaled1);
 
 	const float blend_factor_00 = (1.0f - elevation_fractional_part) * (1.0f - azimuth_fractional_part0);
-	const float blend_factor_01 = (1.0f - elevation_fractional_part) * (azimuth_fractional_part0);
-	const float blend_factor_10 = (elevation_fractional_part)* (1.0f - azimuth_fractional_part1);
-	const float blend_factor_11 = (elevation_fractional_part)* (azimuth_fractional_part1);
+	const float blend_factor_01 = (1.0f - elevation_fractional_part) * azimuth_fractional_part0;
+	const float blend_factor_10 = elevation_fractional_part * (1.0f - azimuth_fractional_part1);
+	const float blend_factor_11 = elevation_fractional_part * azimuth_fractional_part1;
 
-	float delay =
+	ref_data.delay =
 		m_elevations[elevation_index0].azimuths[azimuth_index00].delay * blend_factor_00
 		+ m_elevations[elevation_index0].azimuths[azimuth_index01].delay * blend_factor_01
 		+ m_elevations[elevation_index1].azimuths[azimuth_index10].delay * blend_factor_10
 		+ m_elevations[elevation_index1].azimuths[azimuth_index11].delay * blend_factor_11;
-
-	ref_data.delay = static_cast<uint32_t>(std::round(delay));
 
 	if (ref_data.impulse_response.size() < m_response_length)
 		ref_data.impulse_response.resize(m_response_length);
@@ -131,13 +129,66 @@ void HrtfData::GetDirectionData(angle_t elevation, angle_t azimuth, DirectionDat
 	}
 }
 
-void HrtfData::GetDirectionData(angle_t elevation, angle_t azimuth, DirectionData& ref_data_left, DirectionData& ref_data_right) const
+void HrtfData::get_direction_data(angle_t elevation, angle_t azimuth, distance_t distance, DirectionData& ref_data_left, DirectionData& ref_data_right) const
 {
 	_ASSERT(elevation >= -angle_t(pi * 0.5));
 	_ASSERT(elevation <= angle_t(pi * 0.5));
 	_ASSERT(azimuth >= -angle_t(2.0 * pi));
 	_ASSERT(azimuth <= angle_t(2.0 * pi));
 
-	GetDirectionData(elevation, azimuth, ref_data_left);
-	GetDirectionData(elevation, -azimuth, ref_data_right);
+	get_direction_data(elevation, azimuth, distance, ref_data_left);
+	get_direction_data(elevation, -azimuth, distance, ref_data_right);
+}
+
+void HrtfData::sample_direction(angle_t elevation, angle_t azimuth, distance_t distance, uint32_t sample, float& value, float& delay) const
+{
+	_ASSERT(elevation >= -angle_t(pi * 0.5));
+	_ASSERT(elevation <= angle_t(pi * 0.5));
+	_ASSERT(azimuth >= -angle_t(2.0 * pi));
+	_ASSERT(azimuth <= angle_t(2.0 * pi));
+
+	const float azimuth_mod = std::fmod(azimuth + angle_t(pi * 2.0), angle_t(pi * 2.0));
+
+	const angle_t elevation_scaled = (elevation + angle_t(pi * 0.5)) * (m_elevations.size() - 1) / angle_t(pi);
+	const size_t elevation_index0 = static_cast<size_t>(elevation_scaled);
+	const size_t elevation_index1 = std::min(elevation_index0 + 1, m_elevations.size() - 1);
+	const float elevation_fractional_part = elevation_scaled - std::floor(elevation_scaled);
+
+	const angle_t azimuth_scaled0 = azimuth_mod * m_elevations[elevation_index0].azimuths.size() / angle_t(pi * 2.0);
+	const size_t azimuth_index00 = static_cast<size_t>(azimuth_scaled0) % m_elevations[elevation_index0].azimuths.size();
+	const size_t azimuth_index01 = static_cast<size_t>(azimuth_scaled0 + 1) % m_elevations[elevation_index0].azimuths.size();
+	const float azimuth_fractional_part0 = azimuth_scaled0 - std::floor(azimuth_scaled0);
+
+	const angle_t azimuth_scaled1 = azimuth_mod * m_elevations[elevation_index1].azimuths.size() / angle_t(pi * 2.0);
+	const size_t azimuth_index10 = static_cast<size_t>(azimuth_scaled1) % m_elevations[elevation_index1].azimuths.size();
+	const size_t azimuth_index11 = static_cast<size_t>(azimuth_scaled1 + 1) % m_elevations[elevation_index1].azimuths.size();
+	const float azimuth_fractional_part1 = azimuth_scaled1 - std::floor(azimuth_scaled1);
+
+	const float blend_factor_00 = (1.0f - elevation_fractional_part) * (1.0f - azimuth_fractional_part0);
+	const float blend_factor_01 = (1.0f - elevation_fractional_part) * azimuth_fractional_part0;
+	const float blend_factor_10 = elevation_fractional_part * (1.0f - azimuth_fractional_part1);
+	const float blend_factor_11 = elevation_fractional_part * azimuth_fractional_part1;
+
+	delay =
+		m_elevations[elevation_index0].azimuths[azimuth_index00].delay * blend_factor_00
+		+ m_elevations[elevation_index0].azimuths[azimuth_index01].delay * blend_factor_01
+		+ m_elevations[elevation_index1].azimuths[azimuth_index10].delay * blend_factor_10
+		+ m_elevations[elevation_index1].azimuths[azimuth_index11].delay * blend_factor_11;
+
+	value =
+		m_elevations[elevation_index0].azimuths[azimuth_index00].impulse_response[sample] * blend_factor_00
+		+ m_elevations[elevation_index0].azimuths[azimuth_index01].impulse_response[sample] * blend_factor_01
+		+ m_elevations[elevation_index1].azimuths[azimuth_index10].impulse_response[sample] * blend_factor_10
+		+ m_elevations[elevation_index1].azimuths[azimuth_index11].impulse_response[sample] * blend_factor_11;
+}
+
+void HrtfData::sample_direction(angle_t elevation, angle_t azimuth, distance_t distance, uint32_t sample, float& value_left, float& delay_left, float& value_right, float& delay_right) const
+{
+	_ASSERT(elevation >= -angle_t(pi * 0.5));
+	_ASSERT(elevation <= angle_t(pi * 0.5));
+	_ASSERT(azimuth >= -angle_t(2.0 * pi));
+	_ASSERT(azimuth <= angle_t(2.0 * pi));
+
+	sample_direction(elevation, azimuth, distance, sample, value_left, delay_left);
+	sample_direction(elevation, -azimuth, distance, sample, value_right, delay_right);
 }
