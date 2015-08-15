@@ -54,7 +54,7 @@ float X3DAudioProxy::sample_volume_curve(const X3DAUDIO_EMITTER* pEmitter, float
 	if (pEmitter->pVolumeCurve == nullptr)
 	{
 		float clamped_distance = std::max(1.0f, normalized_distance);
-		return 1.0f / (clamped_distance * clamped_distance);
+		return 1.0f / clamped_distance;
 	}
 
 	if (pEmitter->pVolumeCurve->PointCount == 0)
