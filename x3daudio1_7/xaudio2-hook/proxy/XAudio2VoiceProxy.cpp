@@ -154,11 +154,6 @@ void XAudio2VoiceProxy::GetChannelVolumes(UINT32 Channels, float * pVolumes)
 
 HRESULT XAudio2VoiceProxy::SetOutputMatrix(IXAudio2Voice * pDestinationVoice, UINT32 SourceChannels, UINT32 DestinationChannels, const float * pLevelMatrix, UINT32 OperationSet)
 {
-	if (std::isnan(pLevelMatrix[0]))
-	{
-		return S_OK;
-	}
-
 	// Actual number of input channels may be changed by our code, so we ask voice for it, ignoring DestinationChannels argument.
 	XAUDIO2_VOICE_DETAILS destination_voice_details;
 	if (pDestinationVoice)
@@ -199,11 +194,11 @@ HRESULT XAudio2VoiceProxy::SetOutputMatrix(IXAudio2Voice * pDestinationVoice, UI
 		logger::log(m_type_name, "::SetOutputMatrix ", m_id, " to pDestinationVoice=", pDestinationVoice, " Has Not-NaN and DestinationChannels=", DestinationChannels, " m_output_channels=", m_output_channels, " SourceChannels=", SourceChannels);
 
 		// This is Skyrim-specific
-		if (m_sends.size() > 1)
-		{
-			float matrix[XAUDIO2_MAX_AUDIO_CHANNELS * 2] = { 0 };
-			return m_original->SetOutputMatrix(m_voice_mapper->MapVoiceToOriginal(pDestinationVoice), 2, destination_voice_details.InputChannels, matrix, OperationSet);
-		}
+		//if (m_sends.size() > 1)
+		//{
+		//	float matrix[XAUDIO2_MAX_AUDIO_CHANNELS * 2] = { 0 };
+		//	return m_original->SetOutputMatrix(m_voice_mapper->MapVoiceToOriginal(pDestinationVoice), 2, destination_voice_details.InputChannels, matrix, OperationSet);
+		//}
 
 		m_original->DisableEffect(m_hrtf_effect_index, OperationSet);
 

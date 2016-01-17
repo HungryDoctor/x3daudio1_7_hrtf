@@ -54,12 +54,15 @@ HRESULT XAudio2Proxy::CreateInstance(IUnknown * original, REFIID riid, void ** p
 	if (hr != S_OK)
 		delete self;
 
+#if defined(_DEBUG)
 	XAUDIO2_DEBUG_CONFIGURATION config = { 0 };
 	config.LogThreadID = true;
-	config.TraceMask = XAUDIO2_LOG_FUNC_CALLS | XAUDIO2_LOG_DETAIL | XAUDIO2_LOG_WARNINGS;
+	config.TraceMask = XAUDIO2_LOG_WARNINGS;
+	//config.TraceMask = config.TraceMask | XAUDIO2_LOG_FUNC_CALLS | XAUDIO2_LOG_DETAIL;
 	config.BreakMask = XAUDIO2_LOG_ERRORS;
 
-	//self->m_original->SetDebugConfiguration(&config);
+	self->m_original->SetDebugConfiguration(&config);
+#endif
 
 	return hr;
 }
@@ -93,7 +96,7 @@ STDMETHODIMP_(void) XAudio2Proxy::UnregisterForCallbacks(IXAudio2EngineCallback 
 }
 
 STDMETHODIMP XAudio2Proxy::CreateSourceVoice(IXAudio2SourceVoice ** ppSourceVoice, const WAVEFORMATEX * pSourceFormat, UINT32 Flags, float MaxFrequencyRatio,
-                                             IXAudio2VoiceCallback * pCallback, const XAUDIO2_VOICE_SENDS * pSendList, const XAUDIO2_EFFECT_CHAIN * pEffectChain)
+											 IXAudio2VoiceCallback * pCallback, const XAUDIO2_VOICE_SENDS * pSendList, const XAUDIO2_EFFECT_CHAIN * pEffectChain)
 {
 	try
 	{

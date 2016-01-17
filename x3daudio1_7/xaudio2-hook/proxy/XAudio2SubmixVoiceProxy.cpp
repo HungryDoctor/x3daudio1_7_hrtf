@@ -149,10 +149,6 @@ void XAudio2SubmixVoiceProxy::GetChannelVolumes(UINT32 Channels, float * pVolume
 
 HRESULT XAudio2SubmixVoiceProxy::SetOutputMatrix(IXAudio2Voice * pDestinationVoice, UINT32 SourceChannels, UINT32 DestinationChannels, const float * pLevelMatrix, UINT32 OperationSet)
 {
-	if (std::isnan(pLevelMatrix[0]))
-	{
-		//logger::log("XAudio2SubmixVoiceProxy::SetOutputMatrix NaN ", this);
-	}
 	return m_impl->SetOutputMatrix(pDestinationVoice, SourceChannels, DestinationChannels, pLevelMatrix, OperationSet);
 }
 

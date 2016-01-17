@@ -59,6 +59,7 @@ const size_t g_FunctionsCount = sizeof(g_Functions) / sizeof(FunctionInfo);
 
 HRESULT WINAPI Hook::CoCreateInstance(REFCLSID rclsid, LPUNKNOWN pUnkOuter, DWORD dwClsContext, REFIID riid, LPVOID * ppv)
 {
+#if !defined(BYPASS_COM_HOOK)
 	if (rclsid == __uuidof(XAudio2) || rclsid == __uuidof(XAudio2_6) || rclsid == __uuidof(XAudio2_5) || rclsid == __uuidof(XAudio2_4) || rclsid == __uuidof(XAudio2_3) || rclsid == __uuidof(XAudio2_2) || rclsid == __uuidof(XAudio2_1) || rclsid == __uuidof(XAudio2_0))
 	{
 		if (pUnkOuter)
@@ -75,12 +76,14 @@ HRESULT WINAPI Hook::CoCreateInstance(REFCLSID rclsid, LPUNKNOWN pUnkOuter, DWOR
 
 		return XAudio2Proxy::CreateInstance(originalObject, riid, ppv);
 	}
+#endif
 
 	return Original::CoCreateInstance(rclsid, pUnkOuter, dwClsContext, riid, ppv);
 }
 
 HRESULT WINAPI Hook::CoGetClassObject(REFCLSID rclsid, DWORD dwClsContext, COSERVERINFO * pServerInfo, REFIID riid, LPVOID * ppv)
 {
+#if !defined(BYPASS_COM_HOOK)
 	if (riid == IID_IClassFactory)
 	{
 		ATL::CComPtr<IClassFactory> originalFactory;
@@ -94,6 +97,7 @@ HRESULT WINAPI Hook::CoGetClassObject(REFCLSID rclsid, DWORD dwClsContext, COSER
 
 		return XAudio2ProxyFactory::CreateFactory(originalFactory, ppv);
 	}
+#endif
 
 	return Original::CoGetClassObject(rclsid, dwClsContext, pServerInfo, riid, ppv);
 }
