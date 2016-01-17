@@ -25,6 +25,7 @@ Works well now. Has simple but strange graph. Source voices has two outputs: one
 
 Skyrim always creates Mastering voice as six-channel. We override it to two.
 
+upd: just realized, some sounds are absent. Should be fixed after implementing new internal architecture.
 
 ### Legal Stuff
 #### X3DAudio HRTF
