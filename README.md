@@ -20,7 +20,7 @@ Works well now. No tricky things there. Has pretty complex audio mixing greaph, 
 ##### Arma 2
 Has glitches. I haven't investigate them yet. Most sounds are fine, but HMMWV's engine sound was coming from a completely different direction when I was playing. BattlaEye must be disabled in order to work.
 
-##### TES V Skyrim
+##### TES V Skyrim and Fallout 4
 Works well now. Has simple but strange graph. Source voices has two outputs: one goes directly to the Mastering voice, and another to a Submix, which, in turn, sends to the Mastering one. The one that is sent to Submix, does not pass NaN. So we have nothing to do but not to send any sound there at all by setting output matrix to zero. However that works well.
 
 Skyrim always creates Mastering voice as six-channel. We override it to two.
