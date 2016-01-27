@@ -1,134 +1,125 @@
 #include "stdafx.h"
 #include "XAudio2MasteringVoiceProxy.h"
 
-#include "XAudio2Proxy.h"
-
 #include "util.h"
-#include "logger.h"
+#include <limits>
 
-XAudio2MasteringVoiceProxy::XAudio2MasteringVoiceProxy(IXAudio2 * original_xaudio, IVoiceMapper * voice_mapper, const deleter & on_destroy,
-                                                       UINT32 InputChannels, UINT32 InputSampleRate, UINT32 Flags, UINT32 DeviceIndex, const XAUDIO2_EFFECT_CHAIN * pEffectChain)
-	: m_voice_mapper(voice_mapper)
-	  , m_on_destroy(on_destroy)
+
+XAudio2MasteringVoiceProxy::XAudio2MasteringVoiceProxy(UINT32 inputChannels, UINT32 inputSampleRate, UINT32 flags, UINT32 deviceIndex, const std::vector<XAUDIO2_EFFECT_DESCRIPTOR>& effectChain)
+	: XAudio2VoiceProxy(inputChannels, inputSampleRate, flags,std::numeric_limits<int>::max(), std::vector<XAUDIO2_SEND_DESCRIPTOR>(), effectChain)
+	, m_deviceIndex(deviceIndex)
 {
-	std::wstringstream ss;
-	ss << "XAudio2MasteringVoiceProxy::ctor InputChannels=" << InputChannels << " InputSampleRate=" << InputSampleRate << " DeviceIndex=" << DeviceIndex << " Effects=" << (pEffectChain ? std::to_wstring(pEffectChain->EffectCount) : L"nullptr") << " ";
-	logger::log(ss.str());
-
-	IXAudio2MasteringVoice * original_voice = nullptr;
-	HRESULT result;
-
-	// We force TWO channels (to deal with such games as Skyrim, as it always specifies six channels).
-	if (SUCCEEDED(result = original_xaudio->CreateMasteringVoice(&original_voice, 2, InputSampleRate, Flags, DeviceIndex, pEffectChain)))
-	{
-		m_original = original_voice;
-		m_impl.reset(new XAudio2VoiceProxy(L"XAudio2MasteringVoiceProxy", m_voice_mapper, m_original, this));
-		m_voice_mapper->RememberMap(original_voice, this);
-		m_voice_mapper->RememberMasteringVoice(this);
-		logger::log("IXAudio2::CreateMasteringVoice succeeded ", this);
-	}
 }
 
 XAudio2MasteringVoiceProxy::~XAudio2MasteringVoiceProxy()
 {
-	m_original->DestroyVoice();
+	
 }
 
 void XAudio2MasteringVoiceProxy::GetVoiceDetails(XAUDIO2_VOICE_DETAILS * pVoiceDetails)
 {
-	m_impl->GetVoiceDetails(pVoiceDetails);
+	pVoiceDetails->InputChannels = getInputChannels();
+	pVoiceDetails->CreationFlags = getFlags();
+	pVoiceDetails->InputSampleRate = getInputSampleRate();
 }
 
 HRESULT XAudio2MasteringVoiceProxy::SetOutputVoices(const XAUDIO2_VOICE_SENDS * pSendList)
 {
-	// That shouldn't happen, actually. Mastering voices cannot have sends.
-	return m_impl->SetOutputVoices(pSendList);
+	setOutputVoices(from_XAUDIO2_VOICE_SENDS(pSendList));
+	return S_OK;
 }
 
 HRESULT XAudio2MasteringVoiceProxy::SetEffectChain(const XAUDIO2_EFFECT_CHAIN * pEffectChain)
 {
-	return m_impl->SetEffectChain(pEffectChain);
+	setEffectChain(from_XAUDIO2_EFFECT_CHAIN(pEffectChain));
+	return S_OK;
 }
 
 HRESULT XAudio2MasteringVoiceProxy::EnableEffect(UINT32 EffectIndex, UINT32 OperationSet)
 {
-	return m_impl->EnableEffect(EffectIndex, OperationSet);
+	setEffectEnabled(EffectIndex, true, OperationSet);
+	return S_OK;
 }
 
 HRESULT XAudio2MasteringVoiceProxy::DisableEffect(UINT32 EffectIndex, UINT32 OperationSet)
 {
-	return m_impl->DisableEffect(EffectIndex, OperationSet);
+	setEffectEnabled(EffectIndex, false, OperationSet);
+	return S_OK;
 }
 
 void XAudio2MasteringVoiceProxy::GetEffectState(UINT32 EffectIndex, BOOL * pEnabled)
 {
-	m_impl->GetEffectState(EffectIndex, pEnabled);
+	*pEnabled = getIsEffectEnabled(EffectIndex);
 }
 
 HRESULT XAudio2MasteringVoiceProxy::SetEffectParameters(UINT32 EffectIndex, const void * pParameters, UINT32 ParametersByteSize, UINT32 OperationSet)
 {
-	return m_impl->SetEffectParameters(EffectIndex, pParameters, ParametersByteSize, OperationSet);
+	setEffectParameters(EffectIndex, buffer_to_vector(pParameters, ParametersByteSize), OperationSet);
+	return S_OK;
 }
 
 HRESULT XAudio2MasteringVoiceProxy::GetEffectParameters(UINT32 EffectIndex, void * pParameters, UINT32 ParametersByteSize)
 {
-	return m_impl->GetEffectParameters(EffectIndex, pParameters, ParametersByteSize);
+	vector_to_buffer(getEffectParameters(EffectIndex), pParameters, ParametersByteSize);
+	return S_OK;
 }
 
 HRESULT XAudio2MasteringVoiceProxy::SetFilterParameters(const XAUDIO2_FILTER_PARAMETERS * pParameters, UINT32 OperationSet)
 {
-	return m_impl->SetFilterParameters(pParameters, OperationSet);
+	setFilterParameters(*pParameters, OperationSet);
+	return S_OK;
 }
 
 void XAudio2MasteringVoiceProxy::GetFilterParameters(XAUDIO2_FILTER_PARAMETERS * pParameters)
 {
-	m_impl->GetFilterParameters(pParameters);
+	*pParameters = getFilterParameters();
 }
 
 HRESULT XAudio2MasteringVoiceProxy::SetOutputFilterParameters(IXAudio2Voice * pDestinationVoice, const XAUDIO2_FILTER_PARAMETERS * pParameters, UINT32 OperationSet)
 {
-	return m_impl->SetOutputFilterParameters(pDestinationVoice, pParameters, OperationSet);
+	setOutputFilterParameters(pDestinationVoice, *pParameters, OperationSet);
+	return S_OK;
 }
 
 void XAudio2MasteringVoiceProxy::GetOutputFilterParameters(IXAudio2Voice * pDestinationVoice, XAUDIO2_FILTER_PARAMETERS * pParameters)
 {
-	m_impl->GetOutputFilterParameters(pDestinationVoice, pParameters);
+	*pParameters = getOutputFilterParameters(pDestinationVoice);
 }
 
 HRESULT XAudio2MasteringVoiceProxy::SetVolume(float Volume, UINT32 OperationSet)
 {
-	return m_impl->SetVolume(Volume, OperationSet);
+	setVolume(Volume, OperationSet);
+	return S_OK;
 }
 
 void XAudio2MasteringVoiceProxy::GetVolume(float * pVolume)
 {
-	m_impl->GetVolume(pVolume);
+	*pVolume = getVolume();
 }
 
 HRESULT XAudio2MasteringVoiceProxy::SetChannelVolumes(UINT32 Channels, const float * pVolumes, UINT32 OperationSet)
 {
-	return m_impl->SetChannelVolumes(Channels, pVolumes, OperationSet);
+	setChannelVolumes(buffer_to_vector(pVolumes, Channels), OperationSet);
+	return S_OK;
 }
 
 void XAudio2MasteringVoiceProxy::GetChannelVolumes(UINT32 Channels, float * pVolumes)
 {
-	m_impl->GetChannelVolumes(Channels, pVolumes);
+	vector_to_buffer(getChannelVolumes(), pVolumes, Channels);
 }
 
 HRESULT XAudio2MasteringVoiceProxy::SetOutputMatrix(IXAudio2Voice * pDestinationVoice, UINT32 SourceChannels, UINT32 DestinationChannels, const float * pLevelMatrix, UINT32 OperationSet)
 {
-	return m_original->SetOutputMatrix(pDestinationVoice, SourceChannels, DestinationChannels, pLevelMatrix, OperationSet);
+	setOutputMatrix(pDestinationVoice, ChannelMatrix(pLevelMatrix, SourceChannels, DestinationChannels), OperationSet);
+	return S_OK;
 }
 
 void XAudio2MasteringVoiceProxy::GetOutputMatrix(IXAudio2Voice * pDestinationVoice, UINT32 SourceChannels, UINT32 DestinationChannels, float * pLevelMatrix)
 {
-	m_original->GetOutputMatrix(pDestinationVoice, SourceChannels, DestinationChannels, pLevelMatrix);
+	from_ChannelMatrix(getOutputMatrix(pDestinationVoice), SourceChannels, DestinationChannels, pLevelMatrix);
 }
 
 void XAudio2MasteringVoiceProxy::DestroyVoice()
 {
-	std::wstringstream ss;
-	ss << "XAudio2MasteringVoiceProxy::DestroyVoice " << this;
-	logger::log(ss.str());
-	m_on_destroy(this);
+	destroyVoice();
 }

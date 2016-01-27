@@ -1,22 +1,17 @@
 #pragma once
 
 #include "XAudio2VoiceProxy.h"
-#include <xaudio2.h>
-#include "IVoiceMapper.h"
-#include <memory>
-#include <functional>
 
-class XAudio2MasteringVoiceProxy : public IXAudio2MasteringVoice
+#include <xaudio2.h>
+
+class XAudio2MasteringVoiceProxy : public IXAudio2MasteringVoice, public XAudio2VoiceProxy
 {
 public:
-	typedef std::function<void(XAudio2MasteringVoiceProxy *)> deleter;
+	
 
-public:
-	XAudio2MasteringVoiceProxy(IXAudio2 * original_xaudio, IVoiceMapper * voice_mapper, const deleter & on_destroy,
-	                           UINT32 InputChannels, UINT32 InputSampleRate, UINT32 Flags, UINT32 DeviceIndex, const XAUDIO2_EFFECT_CHAIN * pEffectChain);
+	XAudio2MasteringVoiceProxy(UINT32 inputChannels, UINT32 inputSampleRate, UINT32 Flags, UINT32 deviceIndex, const std::vector<XAUDIO2_EFFECT_DESCRIPTOR> & effectChain);
 	virtual ~XAudio2MasteringVoiceProxy();
 
-public:
 	// Inherited via IXAudio2SubmixVoice
 	STDMETHOD_(void, GetVoiceDetails)(XAUDIO2_VOICE_DETAILS * pVoiceDetails) override;
 	STDMETHOD(SetOutputVoices)(const XAUDIO2_VOICE_SENDS * pSendList) override;
@@ -38,12 +33,11 @@ public:
 	STDMETHOD_(void, GetOutputMatrix)(IXAudio2Voice * pDestinationVoice, UINT32 SourceChannels, UINT32 DestinationChannels, float * pLevelMatrix) override;
 	STDMETHOD_(void, DestroyVoice)() override;
 
-private:
-	std::unique_ptr<XAudio2VoiceProxy> m_impl;
-	IXAudio2MasteringVoice * m_original;
-	IVoiceMapper * m_voice_mapper;
-	deleter m_on_destroy;
+	UINT32 getDeviceIndex() const
+	{
+		return m_deviceIndex;
+	}
 
-	XAudio2MasteringVoiceProxy(const XAudio2MasteringVoiceProxy &) = delete;
-	XAudio2MasteringVoiceProxy& operator=(const XAudio2MasteringVoiceProxy &) = delete;
+private:
+	const UINT32 m_deviceIndex;
 };

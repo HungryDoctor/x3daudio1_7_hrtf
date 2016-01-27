@@ -3,11 +3,12 @@
 #include <atlbase.h>
 #include <atlcom.h>
 
-#include "interop/ISound3DRegistry.h"
-#include "IVoiceMapper.h"
 #include <xaudio2.h>
-#include <map>
+
 #include <memory>
+#include <functional>
+
+class AudioGraphMapper;
 
 
 class
@@ -116,8 +117,10 @@ public:
 	//  pEffectChain - Optional list of effects to apply to the audio data.
 	//
 	STDMETHOD(CreateSubmixVoice)(__deref_out IXAudio2SubmixVoice ** ppSubmixVoice,
-	                                         UINT32 InputChannels, UINT32 InputSampleRate,
-	                                         UINT32 Flags X2DEFAULT(0), UINT32 ProcessingStage X2DEFAULT(0),
+	                                         UINT32 InputChannels,
+	                                         UINT32 InputSampleRate,
+	                                         UINT32 Flags X2DEFAULT(0),
+	                                         UINT32 ProcessingStage X2DEFAULT(0),
 	                                         __in_opt const XAUDIO2_VOICE_SENDS * pSendList X2DEFAULT(NULL),
 	                                         __in_opt const XAUDIO2_EFFECT_CHAIN * pEffectChain X2DEFAULT(NULL));
 
@@ -136,7 +139,8 @@ public:
 	STDMETHOD(CreateMasteringVoice)(__deref_out IXAudio2MasteringVoice ** ppMasteringVoice,
 	                                            UINT32 InputChannels X2DEFAULT(XAUDIO2_DEFAULT_CHANNELS),
 	                                            UINT32 InputSampleRate X2DEFAULT(XAUDIO2_DEFAULT_SAMPLERATE),
-	                                            UINT32 Flags X2DEFAULT(0), UINT32 DeviceIndex X2DEFAULT(0),
+	                                            UINT32 Flags X2DEFAULT(0),
+	                                            UINT32 DeviceIndex X2DEFAULT(0),
 	                                            __in_opt const XAUDIO2_EFFECT_CHAIN * pEffectChain X2DEFAULT(NULL));
 
 	// NAME: IXAudio2::StartEngine
@@ -177,14 +181,12 @@ public:
 	                                                 __in_opt __reserved void * pReserved X2DEFAULT(NULL));
 
 public:
-	void set_voice_mapper(IVoiceMapper * voice_mapper);
-	void set_sound3d_registry(ISound3DRegistry * sound3d_registry);
+	typedef std::function<AudioGraphMapper *(IXAudio2 * xaudio)> AudioGraphFactory;
 
-private:
-	void DestroyVoice(IXAudio2Voice * voice);
+	void set_graph_factory(const AudioGraphFactory & factory);
 
 private:
 	ATL::CComPtr<IXAudio2> m_original;
-	std::unique_ptr<IVoiceMapper> m_voice_mapper;
-	ISound3DRegistry * m_sound3d_registry;
+	AudioGraphFactory m_graph_factory;
+	std::unique_ptr<AudioGraphMapper> m_graph;
 };

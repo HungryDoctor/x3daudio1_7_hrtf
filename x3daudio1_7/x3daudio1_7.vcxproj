@@ -193,6 +193,8 @@
     <ClInclude Include="wave\WaveFile.h" />
     <ClInclude Include="x3daudio-hook\X3DAudioProxy.h" />
     <ClInclude Include="xaudio2-hook\proxy\AlteredEffectChain.h" />
+    <ClInclude Include="xaudio2-hook\proxy\ChannelMatrix.h" />
+    <ClInclude Include="xaudio2-hook\proxy\graph\AudioGraphMapper.h" />
     <ClInclude Include="xaudio2-hook\proxy\VoiceMapper.h" />
     <ClInclude Include="x3daudio-hook\x3daudio_hook.h" />
     <ClInclude Include="xaudio2-hook\creation_hook.h" />
@@ -259,6 +261,7 @@
     </ClCompile>
     <ClCompile Include="wave\WaveFile.cpp" />
     <ClCompile Include="x3daudio-hook\X3DAudioProxy.cpp" />
+    <ClCompile Include="xaudio2-hook\proxy\graph\AudioGraphMapper.cpp" />
     <ClCompile Include="xaudio2-hook\proxy\VoiceMapper.cpp" />
     <ClCompile Include="x3daudio-hook\x3daudio_hook.cpp" />
     <ClCompile Include="xaudio2-hook\creation_hook.cpp" />

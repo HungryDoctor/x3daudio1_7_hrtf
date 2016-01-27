@@ -16,13 +16,13 @@ struct HrtfXapoParam
 	// sound volume [0; 1]
 	float volume_multiplier;
 
-	// elevation, in listener's local space, in radians in the range [-pi/2; +pi/2]
+	// elevation, in listener's local space, in radians in the range [-pi/2; +pi/2] where 0 is horizontal direction.
 	float elevation;
 
-	// azimuth, in listener's local space, in radians in the range [-2pi; +2pi]
+	// azimuth, in listener's local space, in radians in the range [-2pi; +2pi] where 0 is forward direction.
 	float azimuth;
 
-	// distance to the source [0; +inf]
+	// distance to the source [0; +inf)
 	float distance;
 };
 

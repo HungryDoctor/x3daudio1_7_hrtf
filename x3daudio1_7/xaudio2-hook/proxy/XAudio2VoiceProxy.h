@@ -1,59 +1,89 @@
 #pragma once
 
 #include <xaudio2.h>
-#include <string>
 
-#include "interop/ISound3dRegistry.h"
-#include "IVoiceMapper.h"
+#include <functional>
 #include <vector>
+#include <map>
+#include <cstdint>
+#include "ChannelMatrix.h"
+
 
 class XAudio2VoiceProxy
 {
 public:
-	XAudio2VoiceProxy(const std::wstring & type_name, const IVoiceMapper * voice_mapper, IXAudio2Voice * original, const void * id);
-	XAudio2VoiceProxy(const std::wstring & type_name, ISound3DRegistry * sound3d_registry, const IVoiceMapper * voice_mapper, IXAudio2Voice * original, UINT32 input_channels, const void * id, UINT32 hrtf_effect_index, const XAUDIO2_VOICE_SENDS * pSendList);
+	typedef std::map<IXAudio2Voice *, ChannelMatrix> matrices_map;
+	typedef std::map<IXAudio2Voice*, XAUDIO2_FILTER_PARAMETERS> filters_map;
 
-public:
-	// Inherited via IXAudio2SubmixVoice
-	void GetVoiceDetails(XAUDIO2_VOICE_DETAILS * pVoiceDetails);
-	HRESULT SetOutputVoices(const XAUDIO2_VOICE_SENDS * pSendList);
-	HRESULT SetEffectChain(const XAUDIO2_EFFECT_CHAIN * pEffectChain);
-	HRESULT EnableEffect(UINT32 EffectIndex, UINT32 OperationSet = 0U);
-	HRESULT DisableEffect(UINT32 EffectIndex, UINT32 OperationSet = 0U);
-	void GetEffectState(UINT32 EffectIndex, BOOL * pEnabled);
-	HRESULT SetEffectParameters(UINT32 EffectIndex, const void * pParameters, UINT32 ParametersByteSize, UINT32 OperationSet = 0U);
-	HRESULT GetEffectParameters(UINT32 EffectIndex, void * pParameters, UINT32 ParametersByteSize);
-	HRESULT SetFilterParameters(const XAUDIO2_FILTER_PARAMETERS * pParameters, UINT32 OperationSet = 0U);
-	void GetFilterParameters(XAUDIO2_FILTER_PARAMETERS * pParameters);
-	HRESULT SetOutputFilterParameters(IXAudio2Voice * pDestinationVoice, const XAUDIO2_FILTER_PARAMETERS * pParameters, UINT32 OperationSet = 0U);
-	void GetOutputFilterParameters(IXAudio2Voice * pDestinationVoice, XAUDIO2_FILTER_PARAMETERS * pParameters);
-	HRESULT SetVolume(float Volume, UINT32 OperationSet = 0U);
-	void GetVolume(float * pVolume);
-	HRESULT SetChannelVolumes(UINT32 Channels, const float * pVolumes, UINT32 OperationSet = 0U);
-	void GetChannelVolumes(UINT32 Channels, float * pVolumes);
-	HRESULT SetOutputMatrix(IXAudio2Voice * pDestinationVoice, UINT32 SourceChannels, UINT32 DestinationChannels, const float * pLevelMatrix, UINT32 OperationSet = 0U);
-	void GetOutputMatrix(IXAudio2Voice * pDestinationVoice, UINT32 SourceChannels, UINT32 DestinationChannels, float * pLevelMatrix);
+	// void (eventSource)
+	typedef std::function<void(XAudio2VoiceProxy *)> immediate_voice_callback;
 
-protected:
-	HRESULT AlterAndSetEffectChain(const XAUDIO2_EFFECT_CHAIN * original_chain);
+	// void (eventSource, operationSet)
+	typedef std::function<void(XAudio2VoiceProxy *, UINT32)> voice_callback;
 
-private:
-	IXAudio2Voice * m_original;
-	const void * m_id;
-	const std::wstring m_type_name;
-	ISound3DRegistry const * m_sound3d_registry;
-	const IVoiceMapper * m_voice_mapper;
-	const UINT32 m_input_channels;
-	int m_output_channels;
-	UINT32 m_hrtf_effect_index;
-	const bool m_is_master;
+	// void (eventSource, effectIndex, operationSet)
+	typedef std::function<void(XAudio2VoiceProxy *, UINT32, UINT32)> effect_voice_callback;
 
-	std::vector<IXAudio2Voice*> m_sends;
+	// void (eventSource, pDestinationVoice, operationSet)
+	typedef std::function<void(XAudio2VoiceProxy *, IXAudio2Voice *, UINT32)> filter_voice_callback;
 
-	void RememberSends(const XAUDIO2_VOICE_SENDS* pSendList);
+	// void (eventSource, pDestinationVoice, operationSet)
+	typedef std::function<void(XAudio2VoiceProxy *, IXAudio2Voice *, UINT32)> matrix_voice_callback;
 
+	// void (eventSource, [ref] outputMatrices, [ref] outputFilterParams)
+	typedef std::function<void(XAudio2VoiceProxy *, matrices_map &, filters_map &)> sends_voice_callback;
+
+
+	XAudio2VoiceProxy(UINT32 inputChannels, UINT32 inputSampleRate, UINT32 flags, UINT32 processingStage, const std::vector<XAUDIO2_SEND_DESCRIPTOR> & sends, const std::vector<XAUDIO2_EFFECT_DESCRIPTOR> & effectChain);
 	XAudio2VoiceProxy(const XAudio2VoiceProxy &) = delete;
-	XAudio2VoiceProxy& operator=(const XAudio2VoiceProxy &) = delete;
+	virtual ~XAudio2VoiceProxy();
 
-	bool has_hrtf_effect() const;
+	UINT32 getInputChannels() const;
+	UINT32 getInputSampleRate() const;
+	UINT32 getFlags() const;
+	void setOutputVoices(const std::vector<XAUDIO2_SEND_DESCRIPTOR> & sends);
+	void setEffectChain(const std::vector<XAUDIO2_EFFECT_DESCRIPTOR> & chain);
+	void setEffectEnabled(UINT32 effectIndex, bool isEnabled, UINT32 operationSet);
+	bool getIsEffectEnabled(UINT32 effectIndex) const;
+	void setEffectParameters(UINT32 effectIndex, const std::vector<int8_t> & parameters, UINT32 operationSet);
+	const std::vector<int8_t> & getEffectParameters(UINT32 effectIndex) const;
+	void setFilterParameters(const XAUDIO2_FILTER_PARAMETERS & parameters, UINT32 operationSet);
+	XAUDIO2_FILTER_PARAMETERS getFilterParameters() const;
+	void setOutputFilterParameters(IXAudio2Voice * pDestinationVoice, const XAUDIO2_FILTER_PARAMETERS & parameters, UINT32 operationSet);
+	XAUDIO2_FILTER_PARAMETERS getOutputFilterParameters(IXAudio2Voice * pDestinationVoice) const;
+	void setVolume(float volume, UINT32 operationSet);
+	float getVolume() const;
+	void setChannelVolumes(const std::vector<float> & volumes, UINT32 operationSet);
+	std::vector<float> getChannelVolumes() const;
+	void setOutputMatrix(IXAudio2Voice * pDestinationVoice, const ChannelMatrix & matrix, UINT32 operationSet);
+	ChannelMatrix getOutputMatrix(IXAudio2Voice * pDestinationVoice) const;
+
+	void destroyVoice();
+
+	sends_voice_callback onSetOutputVoices;
+	immediate_voice_callback onSetEffectChain;
+	effect_voice_callback onSetEffectEnabled;
+	effect_voice_callback onSetEffectParameters;
+	voice_callback onSetFilterParameters;
+	filter_voice_callback onSetOutputFilterParameters;
+	voice_callback onSetVolume;
+	voice_callback onSetChannelVolumes;
+	matrix_voice_callback onSetOutputMatrix;
+	immediate_voice_callback onDestroyVoice;
+	
+protected:
+	UINT32 m_inputSampleRate;
+private:
+	const UINT32 m_inputChannels;
+	const UINT32 m_flags;
+	const UINT32 m_processingStage;
+	std::vector<XAUDIO2_SEND_DESCRIPTOR> m_sends;
+	std::vector<XAUDIO2_EFFECT_DESCRIPTOR> m_effectChain;
+	std::vector<bool> m_effectActivity;
+	std::vector<std::vector<int8_t>> m_effectParameters;
+	XAUDIO2_FILTER_PARAMETERS m_filterParameters;
+	filters_map m_outputFilterParameters;
+	float m_volume;
+	std::vector<float> m_channelVolumes;
+	matrices_map m_outputMatrices;
 };

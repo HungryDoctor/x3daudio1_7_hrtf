@@ -1,27 +1,25 @@
 #pragma once
 
 #include "XAudio2VoiceProxy.h"
+
 #include <xaudio2.h>
-#include <memory>
 #include <functional>
+#include <vector>
 
-#include "interop/ISound3dRegistry.h"
-#include "IVoiceMapper.h"
-
-class WaveFile;
-
-class XAudio2SourceVoiceProxy : public IXAudio2SourceVoice
+class XAudio2SourceVoiceProxy : public IXAudio2SourceVoice, public XAudio2VoiceProxy
 {
 public:
-	typedef std::function<void(XAudio2SourceVoiceProxy *)> deleter;
+	// pVoice, pBuffer, pBufferWMA
+	typedef std::function<void(XAudio2SourceVoiceProxy *, const XAUDIO2_BUFFER *, const XAUDIO2_BUFFER_WMA *)> submit_buffer_voice_callback;
+
+	typedef std::function<void(XAudio2SourceVoiceProxy *, XAUDIO2_VOICE_STATE &)> state_getter;
 
 public:
-	XAudio2SourceVoiceProxy(IXAudio2 * original_xaudio, ISound3DRegistry * sound3d_registry, IVoiceMapper * voice_mapper, const deleter & on_destroy,
-	                        const WAVEFORMATEX * pSourceFormat, UINT32 Flags, float MaxFrequencyRatio, IXAudio2VoiceCallback * pCallback, const XAUDIO2_VOICE_SENDS * pSendList, const XAUDIO2_EFFECT_CHAIN * pEffectChain);
+	XAudio2SourceVoiceProxy(UINT32 inputChannels, UINT32 inputSampleRate, UINT32 flags, UINT32 processingStage, const std::vector<XAUDIO2_SEND_DESCRIPTOR> & sends, const std::vector<XAUDIO2_EFFECT_DESCRIPTOR> & effect, const state_getter & stateGetter);
 	virtual ~XAudio2SourceVoiceProxy();
 
 public:
-	// Inherited via IXAudio2SourceVoice
+	// Inherited from IXAudio2SourceVoice
 	STDMETHOD(Start)(UINT32 Flags X2DEFAULT(0), UINT32 OperationSet X2DEFAULT(XAUDIO2_COMMIT_NOW)) override;
 	STDMETHOD(Stop)(UINT32 Flags X2DEFAULT(0), UINT32 OperationSet X2DEFAULT(XAUDIO2_COMMIT_NOW)) override;
 	STDMETHOD(SubmitSourceBuffer)(const XAUDIO2_BUFFER * pBuffer, const XAUDIO2_BUFFER_WMA * pBufferWMA X2DEFAULT(NULL)) override;
@@ -32,6 +30,8 @@ public:
 	STDMETHOD(SetFrequencyRatio)(float Ratio, UINT32 OperationSet X2DEFAULT(XAUDIO2_COMMIT_NOW)) override;
 	STDMETHOD_(void, GetFrequencyRatio)(float * pRatio) override;
 	STDMETHOD(SetSourceSampleRate)(UINT32 NewSourceSampleRate) override;
+
+	// Inherited from IXAudio2Voice
 	STDMETHOD_(void, GetVoiceDetails)(XAUDIO2_VOICE_DETAILS * pVoiceDetails) override;
 	STDMETHOD(SetOutputVoices)(const XAUDIO2_VOICE_SENDS * pSendList) override;
 	STDMETHOD(SetEffectChain)(const XAUDIO2_EFFECT_CHAIN * pEffectChain) override;
@@ -52,15 +52,16 @@ public:
 	STDMETHOD_(void, GetOutputMatrix)(IXAudio2Voice * pDestinationVoice, UINT32 SourceChannels, UINT32 DestinationChannels, float * pLevelMatrix) override;
 	STDMETHOD_(void, DestroyVoice)() override;
 
+	voice_callback onStart;
+	voice_callback onStop;
+	submit_buffer_voice_callback onSubmitSourceBuffer;
+	immediate_voice_callback onFlushSourceBuffers;
+	immediate_voice_callback onDiscontinuity;
+	voice_callback onExitLoop;
+	voice_callback onSetFrequencyRatio;
+	immediate_voice_callback onSetSourceSampleRate;
+
 private:
-	std::unique_ptr<XAudio2VoiceProxy> m_impl;
-	IXAudio2SourceVoice * m_original;
-	ISound3DRegistry * m_sound3d_registry;
-	IVoiceMapper * m_voice_mapper;
-	deleter m_on_destroy;
-
-	std::unique_ptr<WaveFile> m_wave_file;
-
-	XAudio2SourceVoiceProxy(const XAudio2SourceVoiceProxy &) = delete;
-	XAudio2SourceVoiceProxy& operator=(const XAudio2SourceVoiceProxy &) = delete;
+	state_getter m_stateGetter;
+	float m_frequencyRatio;
 };

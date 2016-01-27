@@ -1,12 +1,6 @@
 #include "stdafx.h"
 #include "XAudio2Proxy.h"
-
-#include "XAudio2SourceVoiceProxy.h"
-#include "XAudio2SubmixVoiceProxy.h"
-#include "XAudio2MasteringVoiceProxy.h"
-
-#include "interop/Sound3DRegistry.h"
-#include "VoiceMapper.h"
+#include "graph/AudioGraphMapper.h"
 
 #include "logger.h"
 #include "util.h"
@@ -32,10 +26,8 @@ HRESULT XAudio2Proxy::CreateInstance(IUnknown * original, REFIID riid, void ** p
 {
 	auto self = new ATL::CComObjectNoLock<XAudio2Proxy>;
 
-	self->set_sound3d_registry(&Sound3DRegistry::GetInstance());
-	self->set_voice_mapper(new VoiceMapper);
-
 	self->SetVoid(nullptr);
+	self->set_graph_factory([](auto xaudio) { return new AudioGraphMapper(xaudio); });
 
 	self->InternalFinalConstructAddRef();
 	HRESULT hr = self->_AtlInitialConstruct();
@@ -82,6 +74,9 @@ STDMETHODIMP XAudio2Proxy::Initialize(UINT32 Flags, XAUDIO2_PROCESSOR XAudio2Pro
 	logger::log("Initializing XAudio2Proxy");
 	HRESULT result = m_original->Initialize(Flags | XAUDIO2_DEBUG_ENGINE, XAudio2Processor);
 	logger::log(L"(Not)constructed XAudio2Proxy with result " + std::to_wstring(result));
+
+	m_graph.reset(m_graph_factory(m_original));
+
 	return result;
 }
 
@@ -100,16 +95,7 @@ STDMETHODIMP XAudio2Proxy::CreateSourceVoice(IXAudio2SourceVoice ** ppSourceVoic
 {
 	try
 	{
-		*ppSourceVoice = new XAudio2SourceVoiceProxy(
-			m_original.p,
-			m_sound3d_registry,
-			m_voice_mapper.get(),
-			[&](auto voice)
-			{
-				m_voice_mapper->ForgetMapByProxy(voice);
-				delete voice;
-			},
-			pSourceFormat, Flags, MaxFrequencyRatio, pCallback, pSendList, pEffectChain);
+		*ppSourceVoice = m_graph->CreateSourceVoice(pSourceFormat, Flags, MaxFrequencyRatio, pCallback, pSendList, pEffectChain);
 		return S_OK;
 	}
 	catch (std::bad_alloc &)
@@ -122,16 +108,7 @@ STDMETHODIMP XAudio2Proxy::CreateSubmixVoice(IXAudio2SubmixVoice ** ppSubmixVoic
 {
 	try
 	{
-		*ppSubmixVoice = new XAudio2SubmixVoiceProxy(
-			m_original.p,
-			m_sound3d_registry,
-			m_voice_mapper.get(),
-			[&](auto voice)
-			{
-				m_voice_mapper->ForgetMapByProxy(voice);
-				delete voice;
-			},
-			InputChannels, InputSampleRate, Flags, ProcessingStage, pSendList, pEffectChain);
+		*ppSubmixVoice = m_graph->CreateSubmixVoice(InputChannels, InputSampleRate, Flags, ProcessingStage, pSendList, pEffectChain);
 		return S_OK;
 	}
 	catch (std::bad_alloc &)
@@ -142,19 +119,9 @@ STDMETHODIMP XAudio2Proxy::CreateSubmixVoice(IXAudio2SubmixVoice ** ppSubmixVoic
 
 STDMETHODIMP XAudio2Proxy::CreateMasteringVoice(IXAudio2MasteringVoice ** ppMasteringVoice, UINT32 InputChannels, UINT32 InputSampleRate, UINT32 Flags, UINT32 DeviceIndex, const XAUDIO2_EFFECT_CHAIN * pEffectChain)
 {
-	//return m_original->CreateMasteringVoice(ppMasteringVoice, InputChannels, InputSampleRate, Flags, DeviceIndex, pEffectChain);
-
 	try
 	{
-		*ppMasteringVoice = new XAudio2MasteringVoiceProxy(
-			m_original.p,
-			m_voice_mapper.get(),
-			[&](auto voice)
-			{
-				m_voice_mapper->ForgetMapByProxy(voice);
-				delete voice;
-			},
-			InputChannels, InputSampleRate, Flags, DeviceIndex, pEffectChain);
+		*ppMasteringVoice = m_graph->CreateMasteringVoice(InputChannels, InputSampleRate, Flags, DeviceIndex, pEffectChain);
 		return S_OK;
 	}
 	catch (std::bad_alloc &)
@@ -183,22 +150,10 @@ STDMETHODIMP_(void) XAudio2Proxy::GetPerformanceData(XAUDIO2_PERFORMANCE_DATA * 
 	return m_original->GetPerformanceData(pPerfData);
 }
 
-void XAudio2Proxy::set_voice_mapper(IVoiceMapper * voice_mapper)
+void XAudio2Proxy::set_graph_factory(const AudioGraphFactory & factory)
 {
-	m_voice_mapper = std::unique_ptr<IVoiceMapper>(voice_mapper);
+	m_graph_factory = factory;
 }
-
-void XAudio2Proxy::set_sound3d_registry(ISound3DRegistry * sound3d_registry)
-{
-	m_sound3d_registry = sound3d_registry;
-}
-
-void XAudio2Proxy::DestroyVoice(IXAudio2Voice * voice)
-{
-	m_voice_mapper->ForgetMapByProxy(voice);
-	delete voice;
-}
-
 
 STDMETHODIMP_(void) XAudio2Proxy::SetDebugConfiguration(const XAUDIO2_DEBUG_CONFIGURATION * pDebugConfiguration, void * pReserved)
 {

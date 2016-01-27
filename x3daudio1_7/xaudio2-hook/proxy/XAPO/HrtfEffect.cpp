@@ -12,7 +12,7 @@ const UINT32 OUTPUT_CHANNEL_COUNT = 2;
 XAPO_REGISTRATION_PROPERTIES HrtfXapoEffect::m_regProps = {
 	__uuidof(HrtfXapoEffect),
 	L"HRTF Effect",
-	L"Copyright (C)2015 Roman Zavalov et al.",
+	L"Copyright (C)2015 Roman Zavalov",
 	1,
 	0,
 	XAPO_FLAG_FRAMERATE_MUST_MATCH
@@ -33,7 +33,10 @@ HrtfXapoEffect::HrtfXapoEffect(const std::shared_ptr<IHrtfDataSet> & hrtf_data) 
 	CXAPOParametersBase(&m_regProps, reinterpret_cast<BYTE*>(m_params), sizeof(HrtfXapoParam), FALSE)
 	, m_time_per_frame(0)
 	, m_hrtf_data_set(hrtf_data)
+	, m_hrtf_data(nullptr)
 	, m_invalid_buffers_count(0)
+	, m_buffers_per_history(0)
+	, m_history_size(0)
 {
 	m_params[0] = { 0 };
 	m_params[1] = { 0 };
@@ -105,8 +108,6 @@ void HrtfXapoEffect::process_valid_buffer(const float * pInput, float * pOutput,
 
 void HrtfXapoEffect::process_invalid_buffer(float * pOutput, const UINT32 frames_to_write_count, UINT32 & valid_frames_counter, const HrtfXapoParam & params)
 {
-	const float volume = params.volume_multiplier;
-
 	std::fill(std::begin(m_signal) + m_history_size, std::end(m_signal), 0.0f);
 
 	for (UINT32 i = 0; i < frames_to_write_count; i++)

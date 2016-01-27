@@ -1,24 +1,17 @@
 #pragma once
 
-#include "XAudio2VoiceProxy.h"
 #include <xaudio2.h>
-#include <memory>
-#include <functional>
+#include <vector>
 
-#include "interop/ISound3dRegistry.h"
-#include "IVoiceMapper.h"
+#include "XAudio2VoiceProxy.h"
 
-class XAudio2SubmixVoiceProxy : public IXAudio2SubmixVoice
+class XAudio2SubmixVoiceProxy : public IXAudio2SubmixVoice, public XAudio2VoiceProxy
 {
 public:
-	typedef std::function<void(XAudio2SubmixVoiceProxy *)> deleter;
-
-public:
-	XAudio2SubmixVoiceProxy(IXAudio2 * original_xaudio, ISound3DRegistry * sound3d_registry, IVoiceMapper * voice_mapper, const deleter & on_destroy,
-	                        UINT32 InputChannels, UINT32 InputSampleRate, UINT32 Flags, UINT32 ProcessingStage, const XAUDIO2_VOICE_SENDS * pSendList, const XAUDIO2_EFFECT_CHAIN * pEffectChain);
+	XAudio2SubmixVoiceProxy(UINT32 inputChannels, UINT32 inputSampleRate, UINT32 flags, UINT32 processingStage, const std::vector<XAUDIO2_SEND_DESCRIPTOR> & sends, const std::vector<XAUDIO2_EFFECT_DESCRIPTOR> & effectChain);
 	virtual ~XAudio2SubmixVoiceProxy();
 
-public:
+
 	// Inherited via IXAudio2SubmixVoice
 	STDMETHOD_(void, GetVoiceDetails)(XAUDIO2_VOICE_DETAILS * pVoiceDetails) override;
 	STDMETHOD(SetOutputVoices)(const XAUDIO2_VOICE_SENDS * pSendList) override;
@@ -40,14 +33,4 @@ public:
 	STDMETHOD_(void, GetOutputMatrix)(IXAudio2Voice * pDestinationVoice, UINT32 SourceChannels, UINT32 DestinationChannels, float * pLevelMatrix) override;
 	STDMETHOD_(void, DestroyVoice)() override;
 
-
-private:
-	std::unique_ptr<XAudio2VoiceProxy> m_impl;
-	IXAudio2SubmixVoice * m_original;
-	ISound3DRegistry * m_sound3d_registry;
-	IVoiceMapper * m_voice_mapper;
-	deleter m_on_destroy;
-
-	XAudio2SubmixVoiceProxy(const XAudio2SubmixVoiceProxy &) = delete;
-	XAudio2SubmixVoiceProxy& operator=(const XAudio2SubmixVoiceProxy &) = delete;
 };
