@@ -11,6 +11,8 @@
 #include <iomanip>
 #include <string>
 
+#include "common_types.h"
+
 inline void print_sends(std::wstringstream & ss, const XAUDIO2_VOICE_SENDS * pSendList)
 {
 	ss << "sends [";
@@ -29,19 +31,29 @@ inline void print_sends(std::wstringstream & ss, const XAUDIO2_VOICE_SENDS * pSe
 	ss << "]";
 }
 
-inline std::vector<XAUDIO2_SEND_DESCRIPTOR> from_XAUDIO2_VOICE_SENDS(const XAUDIO2_VOICE_SENDS * pSendList)
+inline VoiceSends from_XAUDIO2_VOICE_SENDS(const XAUDIO2_VOICE_SENDS * pSendList)
 {
-	std::vector<XAUDIO2_SEND_DESCRIPTOR> sends;
-	sends.resize(pSendList->SendCount);
-	std::copy(pSendList->pSends, pSendList->pSends + pSendList->SendCount, std::begin(sends));
-	return sends;
+	if (pSendList)
+	{
+		voice_sends sends;
+		sends.resize(pSendList->SendCount);
+		std::copy(pSendList->pSends, pSendList->pSends + pSendList->SendCount, std::begin(sends));
+		return VoiceSends(sends);
+	}
+	else
+	{
+		return VoiceSends();
+	}
 }
 
-inline std::vector<XAUDIO2_EFFECT_DESCRIPTOR> from_XAUDIO2_EFFECT_CHAIN(const XAUDIO2_EFFECT_CHAIN * pEffectChain)
+inline effect_chain from_XAUDIO2_EFFECT_CHAIN(const XAUDIO2_EFFECT_CHAIN * pEffectChain)
 {
-	std::vector<XAUDIO2_EFFECT_DESCRIPTOR> effects;
-	effects.resize(pEffectChain->EffectCount);
-	std::copy(pEffectChain->pEffectDescriptors, pEffectChain->pEffectDescriptors + pEffectChain->EffectCount, std::begin(effects));
+	effect_chain effects;
+	if (pEffectChain)
+	{
+		effects.resize(pEffectChain->EffectCount);
+		std::copy(pEffectChain->pEffectDescriptors, pEffectChain->pEffectDescriptors + pEffectChain->EffectCount, std::begin(effects));
+	}
 	return effects;
 }
 
@@ -84,7 +96,7 @@ inline void from_ChannelMatrix(const ChannelMatrix & matrix, UINT32 sourceChanne
 	{
 		for (UINT32 srcIndex = 0; srcIndex < sourceChannels; srcIndex++)
 		{
-			pLevelMatrix[destIndex * destinationChannels + srcIndex] = matrix.getValue(srcIndex, destIndex);
+			pLevelMatrix[destIndex * sourceChannels + srcIndex] = matrix.getValue(srcIndex, destIndex);
 		}
 	}
 }
@@ -96,4 +108,12 @@ inline std::wstring get_name(const void * ptr)
 	ss << std::put_time(std::localtime(&result), L"%H-%M-%S") << L"_";
 	ss << ptr;
 	return ss.str();
+}
+
+inline XAUDIO2_VOICE_SENDS from_voice_sends(const VoiceSends & sends)
+{
+	XAUDIO2_VOICE_SENDS sendsStruct;
+	sendsStruct.SendCount = static_cast<UINT32>(sends.getSends().size());
+	sendsStruct.pSends = const_cast<XAUDIO2_SEND_DESCRIPTOR*>(&*sends.getSends().begin());
+	return sendsStruct;
 }

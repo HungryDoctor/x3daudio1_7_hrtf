@@ -9,7 +9,7 @@ class XAudio2MasteringVoiceProxy : public IXAudio2MasteringVoice, public XAudio2
 public:
 	
 
-	XAudio2MasteringVoiceProxy(UINT32 inputChannels, UINT32 inputSampleRate, UINT32 Flags, UINT32 deviceIndex, const std::vector<XAUDIO2_EFFECT_DESCRIPTOR> & effectChain);
+	XAudio2MasteringVoiceProxy(UINT32 inputChannels, UINT32 inputSampleRate, UINT32 Flags, UINT32 deviceIndex, const effect_chain & effectChain);
 	virtual ~XAudio2MasteringVoiceProxy();
 
 	// Inherited via IXAudio2SubmixVoice

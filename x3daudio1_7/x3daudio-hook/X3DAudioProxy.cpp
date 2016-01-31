@@ -17,6 +17,7 @@ X3DAudioProxy::X3DAudioProxy(const x3daudio1_7_dll & original, ISound3DRegistry 
 void X3DAudioProxy::X3DAudioCalculate(const X3DAUDIO_LISTENER * pListener, const X3DAUDIO_EMITTER * pEmitter, UINT32 Flags, X3DAUDIO_DSP_SETTINGS * pDSPSettings)
 {
 	m_original.X3DAudioCalculate(m_handle, pListener, pEmitter, Flags, pDSPSettings);
+	return;
 
 	// changing left-hand to ortodox right-hand
 	math::vector3 listener_position(pListener->Position.x, pListener->Position.y, pListener->Position.z);

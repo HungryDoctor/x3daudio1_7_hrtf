@@ -24,9 +24,6 @@
     <ClInclude Include="xaudio2-hook\creation_hook.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="xaudio2-hook\proxy\util.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="xaudio2-hook\proxy\XAudio2Proxy.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -82,9 +79,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="wave\WaveFile.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="xaudio2-hook\proxy\XAPO\HrtfEffect.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="xaudio2-hook\proxy\AlteredEffectChain.h">
@@ -156,10 +150,22 @@
     <ClInclude Include="xaudio2-hook\proxy\XAudio2VoiceProxy.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="xaudio2-hook\proxy\ChannelMatrix.h">
+    <ClInclude Include="xaudio2-hook\graph\AudioGraphMapper.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="xaudio2-hook\proxy\graph\AudioGraphMapper.h">
+    <ClInclude Include="xaudio2-hook\XAPO\HrtfEffect.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="xaudio2-hook\util.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="xaudio2-hook\common_types.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="xaudio2-hook\ChannelMatrix.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="xaudio2-hook\VoiceSends.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -221,9 +227,6 @@
     <ClCompile Include="wave\WaveFile.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="xaudio2-hook\proxy\XAPO\HrtfEffect.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="math\RandomEngine.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -233,10 +236,13 @@
     <ClCompile Include="hrtf\HrtfDataSet.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="xaudio2-hook\proxy\graph\AudioGraphMapper.cpp">
+    <ClCompile Include="xaudio2-hook\proxy\XAudio2VoiceProxy.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="xaudio2-hook\proxy\XAudio2VoiceProxy.cpp">
+    <ClCompile Include="xaudio2-hook\graph\AudioGraphMapper.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="xaudio2-hook\XAPO\HrtfEffect.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

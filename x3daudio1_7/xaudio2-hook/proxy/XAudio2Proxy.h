@@ -32,10 +32,9 @@ public:
 public:
 	HRESULT FinalConstruct();
 	void FinalRelease();
-
 public:
 	HRESULT static CreateInstance(IUnknown * original, REFIID riid, void ** ppvObject);
-
+	HRESULT static CreateActualDebugInstance(IUnknown * original, REFIID riid, void ** ppvObject);
 public:
 
 	// NAME: IXAudio2::GetDeviceCount

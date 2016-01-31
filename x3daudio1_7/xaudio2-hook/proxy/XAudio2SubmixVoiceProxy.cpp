@@ -2,10 +2,9 @@
 #include "XAudio2SubmixVoiceProxy.h"
 
 #include "util.h"
-#include "logger.h"
 
 
-XAudio2SubmixVoiceProxy::XAudio2SubmixVoiceProxy(UINT32 inputChannels, UINT32 inputSampleRate, UINT32 flags, UINT32 processingStage, const std::vector<XAUDIO2_SEND_DESCRIPTOR> & sends, const std::vector<XAUDIO2_EFFECT_DESCRIPTOR> & chain)
+XAudio2SubmixVoiceProxy::XAudio2SubmixVoiceProxy(UINT32 inputChannels, UINT32 inputSampleRate, UINT32 flags, UINT32 processingStage, const VoiceSends & sends, const effect_chain & chain)
 	: XAudio2VoiceProxy(inputChannels, inputSampleRate, flags, processingStage, sends, chain)
 {
 
@@ -110,6 +109,7 @@ void XAudio2SubmixVoiceProxy::GetChannelVolumes(UINT32 Channels, float * pVolume
 
 HRESULT XAudio2SubmixVoiceProxy::SetOutputMatrix(IXAudio2Voice * pDestinationVoice, UINT32 SourceChannels, UINT32 DestinationChannels, const float * pLevelMatrix, UINT32 OperationSet)
 {
+	
 	setOutputMatrix(pDestinationVoice, ChannelMatrix(pLevelMatrix, SourceChannels, DestinationChannels), OperationSet);
 	return S_OK;
 }

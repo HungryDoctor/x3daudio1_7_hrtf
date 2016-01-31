@@ -7,11 +7,11 @@ class ChannelMatrix
 {
 public:
 	ChannelMatrix(const float * values, unsigned int sourceCount, unsigned int destinationCount)
+		: m_sourceCount(sourceCount)
+		, m_destinationCount(destinationCount)
+		, m_values(sourceCount * destinationCount)
 	{
-		m_sourceCount = sourceCount;
-		m_destinationCount = m_destinationCount;
 		auto size = sourceCount * destinationCount;
-		m_values.resize(size);
 		std::copy(values, values + size, std::begin(m_values));
 	}
 
@@ -30,7 +30,7 @@ public:
 		if (source >= m_sourceCount || destination >= m_destinationCount)
 			throw std::logic_error("Accessing element out of matrix bounds.");
 
-		return m_values[source * m_destinationCount + destination];
+		return m_values[destination * m_sourceCount + source];
 	}
 
 private:

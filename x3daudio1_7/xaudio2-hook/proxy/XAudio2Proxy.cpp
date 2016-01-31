@@ -5,8 +5,6 @@
 #include "logger.h"
 #include "util.h"
 
-#include <sstream>
-#include <vector>
 
 XAudio2Proxy::XAudio2Proxy()
 {
@@ -38,7 +36,9 @@ HRESULT XAudio2Proxy::CreateInstance(IUnknown * original, REFIID riid, void ** p
 	self->InternalFinalConstructRelease();
 
 	if (SUCCEEDED(hr))
+	{
 		hr = original->QueryInterface(__uuidof(IXAudio2), reinterpret_cast<void**>(&self->m_original));
+	}
 
 	if (SUCCEEDED(hr))
 		hr = self->QueryInterface(riid, ppvObject);
@@ -57,6 +57,21 @@ HRESULT XAudio2Proxy::CreateInstance(IUnknown * original, REFIID riid, void ** p
 #endif
 
 	return hr;
+}
+
+HRESULT XAudio2Proxy::CreateActualDebugInstance(IUnknown* original, const IID& riid, void** ppvObject)
+{
+	IXAudio2 * xaudio;
+	original->QueryInterface(__uuidof(IXAudio2), reinterpret_cast<void**>(&xaudio));
+	*ppvObject = xaudio;
+	XAUDIO2_DEBUG_CONFIGURATION config;
+	config.LogThreadID = true;
+	config.TraceMask = XAUDIO2_LOG_WARNINGS;
+	//config.TraceMask = config.TraceMask | XAUDIO2_LOG_FUNC_CALLS | XAUDIO2_LOG_DETAIL;
+	config.BreakMask = XAUDIO2_LOG_ERRORS;
+
+	xaudio->SetDebugConfiguration(&config);
+	return S_OK;
 }
 
 STDMETHODIMP XAudio2Proxy::GetDeviceCount(UINT32 * pCount)

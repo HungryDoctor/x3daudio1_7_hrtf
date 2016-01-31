@@ -4,12 +4,15 @@
 #include "util.h"
 
 
-XAudio2SourceVoiceProxy::XAudio2SourceVoiceProxy(UINT32 inputChannels, UINT32 inputSampleRate, UINT32 flags, UINT32 processingStage, const std::vector<XAUDIO2_SEND_DESCRIPTOR> & sends, const std::vector<XAUDIO2_EFFECT_DESCRIPTOR> & chain, const state_getter & stateGetter)
-	: XAudio2VoiceProxy(inputChannels, inputSampleRate, flags, processingStage, sends, chain),
-	m_stateGetter(stateGetter)
+XAudio2SourceVoiceProxy::XAudio2SourceVoiceProxy(UINT32 inputChannels, UINT32 inputSampleRate, UINT32 flags, float maxFrequencyRatio, IXAudio2VoiceCallback * pCallback, UINT32 processingStage, const VoiceSends & sends, const effect_chain & chain)
+	: XAudio2VoiceProxy(inputChannels, inputSampleRate, flags, processingStage, sends, chain)
+	, m_maxFrequencyRatio(maxFrequencyRatio)
+	, m_frequencyRatio(std::min(maxFrequencyRatio, 1.0f))
+	, m_voiceCallback(pCallback)
 {
 	
 }
+
 
 XAudio2SourceVoiceProxy::~XAudio2SourceVoiceProxy()
 {
@@ -18,13 +21,13 @@ XAudio2SourceVoiceProxy::~XAudio2SourceVoiceProxy()
 
 HRESULT XAudio2SourceVoiceProxy::Start(UINT32 Flags, UINT32 OperationSet)
 {
-	onStart(this, OperationSet);
+	onStart(this, Flags, OperationSet);
 	return S_OK;
 }
 
 HRESULT XAudio2SourceVoiceProxy::Stop(UINT32 Flags, UINT32 OperationSet)
 {
-	onStop(this, OperationSet);
+	onStop(this, Flags, OperationSet);
 	return S_OK;
 }
 
@@ -54,7 +57,7 @@ HRESULT XAudio2SourceVoiceProxy::ExitLoop(UINT32 OperationSet)
 
 void XAudio2SourceVoiceProxy::GetState(XAUDIO2_VOICE_STATE * pVoiceState)
 {
-	m_stateGetter(this, *pVoiceState);
+	stateGetter(this, *pVoiceState);
 }
 
 HRESULT XAudio2SourceVoiceProxy::SetFrequencyRatio(float Ratio, UINT32 OperationSet)

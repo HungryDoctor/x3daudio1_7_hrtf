@@ -96,7 +96,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;X3DAUDIO1_7_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>.</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.;xaudio2-hook</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -110,7 +110,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;X3DAUDIO1_7_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>.</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.;xaudio2-hook</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -126,7 +126,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;X3DAUDIO1_7_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>.</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.;xaudio2-hook</AdditionalIncludeDirectories>
       <FloatingPointModel>Fast</FloatingPointModel>
     </ClCompile>
     <Link>
@@ -144,7 +144,7 @@
       <Optimization>MaxSpeed</Optimization>
       <IntrinsicFunctions>false</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;X3DAUDIO1_7_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>.</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.;xaudio2-hook</AdditionalIncludeDirectories>
       <FloatingPointModel>Fast</FloatingPointModel>
       <WholeProgramOptimization>true</WholeProgramOptimization>
     </ClCompile>
@@ -192,15 +192,17 @@
     <ClInclude Include="targetver.h" />
     <ClInclude Include="wave\WaveFile.h" />
     <ClInclude Include="x3daudio-hook\X3DAudioProxy.h" />
+    <ClInclude Include="xaudio2-hook\common_types.h" />
     <ClInclude Include="xaudio2-hook\proxy\AlteredEffectChain.h" />
-    <ClInclude Include="xaudio2-hook\proxy\ChannelMatrix.h" />
-    <ClInclude Include="xaudio2-hook\proxy\graph\AudioGraphMapper.h" />
+    <ClInclude Include="xaudio2-hook\ChannelMatrix.h" />
+    <ClInclude Include="xaudio2-hook\graph\AudioGraphMapper.h" />
     <ClInclude Include="xaudio2-hook\proxy\VoiceMapper.h" />
     <ClInclude Include="x3daudio-hook\x3daudio_hook.h" />
     <ClInclude Include="xaudio2-hook\creation_hook.h" />
     <ClInclude Include="xaudio2-hook\proxy\IVoiceMapper.h" />
-    <ClInclude Include="xaudio2-hook\proxy\util.h" />
-    <ClInclude Include="xaudio2-hook\proxy\XAPO\HrtfEffect.h" />
+    <ClInclude Include="xaudio2-hook\util.h" />
+    <ClInclude Include="xaudio2-hook\VoiceSends.h" />
+    <ClInclude Include="xaudio2-hook\XAPO\HrtfEffect.h" />
     <ClInclude Include="xaudio2-hook\proxy\XAudio2MasteringVoiceProxy.h" />
     <ClInclude Include="xaudio2-hook\proxy\XAudio2Proxy.h" />
     <ClInclude Include="xaudio2-hook\proxy\XAudio2ProxyFactory.h" />
@@ -261,11 +263,11 @@
     </ClCompile>
     <ClCompile Include="wave\WaveFile.cpp" />
     <ClCompile Include="x3daudio-hook\X3DAudioProxy.cpp" />
-    <ClCompile Include="xaudio2-hook\proxy\graph\AudioGraphMapper.cpp" />
+    <ClCompile Include="xaudio2-hook\graph\AudioGraphMapper.cpp" />
     <ClCompile Include="xaudio2-hook\proxy\VoiceMapper.cpp" />
     <ClCompile Include="x3daudio-hook\x3daudio_hook.cpp" />
     <ClCompile Include="xaudio2-hook\creation_hook.cpp" />
-    <ClCompile Include="xaudio2-hook\proxy\XAPO\HrtfEffect.cpp" />
+    <ClCompile Include="xaudio2-hook\XAPO\HrtfEffect.cpp" />
     <ClCompile Include="xaudio2-hook\proxy\XAudio2MasteringVoiceProxy.cpp" />
     <ClCompile Include="xaudio2-hook\proxy\XAudio2Proxy.cpp" />
     <ClCompile Include="xaudio2-hook\proxy\XAudio2ProxyFactory.cpp" />

@@ -8,7 +8,7 @@
 class XAudio2SubmixVoiceProxy : public IXAudio2SubmixVoice, public XAudio2VoiceProxy
 {
 public:
-	XAudio2SubmixVoiceProxy(UINT32 inputChannels, UINT32 inputSampleRate, UINT32 flags, UINT32 processingStage, const std::vector<XAUDIO2_SEND_DESCRIPTOR> & sends, const std::vector<XAUDIO2_EFFECT_DESCRIPTOR> & effectChain);
+	XAudio2SubmixVoiceProxy(UINT32 inputChannels, UINT32 inputSampleRate, UINT32 flags, UINT32 processingStage, const VoiceSends & sends, const effect_chain & effectChain);
 	virtual ~XAudio2SubmixVoiceProxy();
 
 

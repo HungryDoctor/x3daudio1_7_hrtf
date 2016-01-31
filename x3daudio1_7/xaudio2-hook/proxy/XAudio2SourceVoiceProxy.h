@@ -9,13 +9,24 @@
 class XAudio2SourceVoiceProxy : public IXAudio2SourceVoice, public XAudio2VoiceProxy
 {
 public:
+	// void (eventSource, operationSet)
+	typedef std::function<void(XAudio2SourceVoiceProxy *, UINT32)> source_voice_callback;
+
+	// void (eventSource)
+	typedef std::function<void(XAudio2SourceVoiceProxy *)> immediate_source_voice_callback;
+
 	// pVoice, pBuffer, pBufferWMA
 	typedef std::function<void(XAudio2SourceVoiceProxy *, const XAUDIO2_BUFFER *, const XAUDIO2_BUFFER_WMA *)> submit_buffer_voice_callback;
 
+	// pVoice, flags, operationSet
+	typedef std::function<void(XAudio2SourceVoiceProxy *, UINT32, UINT32)> start_stop_voice_callback;
+
+	// pVoice, out_state
 	typedef std::function<void(XAudio2SourceVoiceProxy *, XAUDIO2_VOICE_STATE &)> state_getter;
 
+
 public:
-	XAudio2SourceVoiceProxy(UINT32 inputChannels, UINT32 inputSampleRate, UINT32 flags, UINT32 processingStage, const std::vector<XAUDIO2_SEND_DESCRIPTOR> & sends, const std::vector<XAUDIO2_EFFECT_DESCRIPTOR> & effect, const state_getter & stateGetter);
+	XAudio2SourceVoiceProxy(UINT32 inputChannels, UINT32 inputSampleRate, UINT32 flags, float maxFrequencyRatio, IXAudio2VoiceCallback * pCallback, UINT32 processingStage, const VoiceSends & sends, const effect_chain & effect);
 	virtual ~XAudio2SourceVoiceProxy();
 
 public:
@@ -52,16 +63,34 @@ public:
 	STDMETHOD_(void, GetOutputMatrix)(IXAudio2Voice * pDestinationVoice, UINT32 SourceChannels, UINT32 DestinationChannels, float * pLevelMatrix) override;
 	STDMETHOD_(void, DestroyVoice)() override;
 
-	voice_callback onStart;
-	voice_callback onStop;
+	float getMaxFrequencyRatio() const
+	{
+		return m_maxFrequencyRatio;
+	}
+
+	float getFrequencyRatio() const
+	{
+		return m_frequencyRatio;
+	}
+
+	IXAudio2VoiceCallback* getVoiceCallback() const
+	{
+		return m_voiceCallback;
+	}
+
+	state_getter stateGetter;
+	start_stop_voice_callback onStart;
+	start_stop_voice_callback onStop;
 	submit_buffer_voice_callback onSubmitSourceBuffer;
-	immediate_voice_callback onFlushSourceBuffers;
-	immediate_voice_callback onDiscontinuity;
-	voice_callback onExitLoop;
-	voice_callback onSetFrequencyRatio;
-	immediate_voice_callback onSetSourceSampleRate;
+	immediate_source_voice_callback onFlushSourceBuffers;
+	immediate_source_voice_callback onDiscontinuity;
+	source_voice_callback onExitLoop;
+	source_voice_callback onSetFrequencyRatio;
+	immediate_source_voice_callback onSetSourceSampleRate;
+
 
 private:
-	state_getter m_stateGetter;
+	const float m_maxFrequencyRatio;
 	float m_frequencyRatio;
+	IXAudio2VoiceCallback * m_voiceCallback;
 };

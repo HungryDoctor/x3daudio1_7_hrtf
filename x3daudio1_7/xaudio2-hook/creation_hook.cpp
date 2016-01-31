@@ -73,8 +73,8 @@ HRESULT WINAPI Hook::CoCreateInstance(REFCLSID rclsid, LPUNKNOWN pUnkOuter, DWOR
 #endif
 		if (FAILED(hr))
 			return hr;
-
-		return XAudio2Proxy::CreateInstance(originalObject, riid, ppv);
+		
+		return XAudio2Proxy::CreateInstance(originalObject.Detach(), riid, ppv);
 	}
 #endif
 
