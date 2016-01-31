@@ -15,7 +15,7 @@ X3daudio proxy remembers 3D audio position into repository. To mark sound as 3D 
 Then, when game calls IXAuido2Voice::SetOutputMatrix(), we check if 1st coeff == NaN which means we have to enable our XAPO DSP effect and pass parameters to it (position, etc).
 
 ##### Arma 3
-Works well now. No tricky things there. Has pretty complex audio mixing greaph, but nothing wierd. BattlaEye must be disabled in order to work.
+Works well now. No tricky things there. Has pretty complex audio mixing graph, but nothing wierd. BattlaEye must be disabled in order to work.
 
 ##### Arma 2
 Has glitches. I haven't investigate them yet. Most sounds are fine, but HMMWV's engine sound was coming from a completely different direction when I was playing. BattlaEye must be disabled in order to work.
