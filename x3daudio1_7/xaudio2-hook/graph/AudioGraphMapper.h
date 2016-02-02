@@ -1,9 +1,12 @@
 #pragma once
 
+#include "EdgeRepository.h"
+
 #include <xaudio2.h>
 #include <map>
 #include <memory>
 #include <xaudio2-hook/common_types.h>
+
 
 class XAudio2SourceVoiceProxy;
 class XAudio2VoiceProxy;
@@ -50,6 +53,7 @@ private:
 	IXAudio2 * m_xaudio;
 	std::map<IXAudio2Voice*, VoiceDescriptor> m_voices;
 	VoiceDescriptor * m_masteringVoice;
+	EdgeRepository<VoiceDescriptor*> m_edges;
 
 	VoiceSends mapProxySendsToActualOnes(const VoiceSends & proxySends) const;
 	const VoiceDescriptor & getDescriptorForProxyVoice(IXAudio2Voice* pDestination) const;
