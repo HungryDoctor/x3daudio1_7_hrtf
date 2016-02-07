@@ -67,18 +67,18 @@ public:
 	{
 		auto it = m_predecessorToSuccessors.find(vertex);
 		if (it == m_predecessorToSuccessors.end())
-			return std::set<T>(0);
+			return std::set<T>();
 		else
-			return *it;
+			return it->second;
 	}
 
 	std::set<T> getPredecessors(T vertex) const
 	{
 		auto it = m_successorToPredecessors.find(vertex);
 		if (it == m_successorToPredecessors.end())
-			return std::set<T>(0);
+			return std::set<T>();
 		else
-			return *it;
+			return it->second;
 	}
 
 private:

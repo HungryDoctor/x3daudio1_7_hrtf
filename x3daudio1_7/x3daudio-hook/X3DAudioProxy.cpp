@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "X3DAudioProxy.h"
+#include "interop/ChannelMatrixMagic.h"
 
 #include "math/math_types.h"
 
@@ -8,7 +9,7 @@
 
 X3DAudioProxy::X3DAudioProxy(const x3daudio1_7_dll & original, ISound3DRegistry * registry, UINT32 SpeakerChannelMask, FLOAT32 SpeedOfSound)
 	: m_original(original)
-	  , m_registry(registry)
+	, m_registry(registry)
 {
 	m_original.X3DAudioInitialize(SpeakerChannelMask, SpeedOfSound, m_handle);
 }
@@ -17,14 +18,13 @@ X3DAudioProxy::X3DAudioProxy(const x3daudio1_7_dll & original, ISound3DRegistry 
 void X3DAudioProxy::X3DAudioCalculate(const X3DAUDIO_LISTENER * pListener, const X3DAUDIO_EMITTER * pEmitter, UINT32 Flags, X3DAUDIO_DSP_SETTINGS * pDSPSettings)
 {
 	m_original.X3DAudioCalculate(m_handle, pListener, pEmitter, Flags, pDSPSettings);
-	return;
 
 	// changing left-hand to ortodox right-hand
 	math::vector3 listener_position(pListener->Position.x, pListener->Position.y, pListener->Position.z);
 	math::vector3 emitter_position(pEmitter->Position.x, pEmitter->Position.y, pEmitter->Position.z);
 
 	auto listener_to_emitter = emitter_position - listener_position;
-	
+
 	math::vector3 listener_frame_front(pListener->OrientFront.x, pListener->OrientFront.y, pListener->OrientFront.z);
 	math::vector3 listener_frame_up(pListener->OrientTop.x, pListener->OrientTop.y, pListener->OrientTop.z);
 	auto listener_frame_right = math::cross(listener_frame_up, listener_frame_front);
@@ -44,8 +44,7 @@ void X3DAudioProxy::X3DAudioCalculate(const X3DAUDIO_LISTENER * pListener, const
 
 	auto id = m_registry->CreateEntry(entry);
 
-	pDSPSettings->pMatrixCoefficients[0] = std::numeric_limits<FLOAT32>::quiet_NaN(); // flagging as hacked
-	pDSPSettings->pMatrixCoefficients[1] = *reinterpret_cast<FLOAT32*>(&id);
+	embed_sound_id(pDSPSettings->pMatrixCoefficients, pDSPSettings->SrcChannelCount, pDSPSettings->DstChannelCount, id);
 }
 
 float X3DAudioProxy::sample_volume_curve(const X3DAUDIO_EMITTER* pEmitter, float distance)

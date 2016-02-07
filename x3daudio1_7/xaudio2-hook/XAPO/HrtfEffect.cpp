@@ -23,7 +23,22 @@ XAPO_REGISTRATION_PROPERTIES HrtfXapoEffect::m_regProps = {
 
 HrtfXapoEffect* HrtfXapoEffect::CreateInstance()
 {
-	static std::shared_ptr<HrtfDataSet> hrtf_data(new HrtfDataSet({ L"hrtf\\default-44100.mhr", L"hrtf\\default-48000.mhr" }));
+	std::vector<std::wstring> dataFiles;
+
+	WIN32_FIND_DATAW fileData;
+	HANDLE hFind = FindFirstFileW(L"hrtf\\*.mhr", &fileData);
+
+	if (hFind == INVALID_HANDLE_VALUE)
+		throw std::logic_error("No mhr files found in hrtf directory.");
+
+	do
+	{
+		dataFiles.push_back(std::wstring(L"hrtf\\") + fileData.cFileName);
+	} while (FindNextFileW(hFind, &fileData));
+
+	FindClose(hFind);
+
+	static std::shared_ptr<HrtfDataSet> hrtf_data(new HrtfDataSet(dataFiles));
 	auto instance = new HrtfXapoEffect(hrtf_data);
 	instance->Initialize(nullptr, 0);
 	return instance;
@@ -63,6 +78,9 @@ HRESULT HrtfXapoEffect::LockForProcess(UINT32 InputLockedParameterCount, const X
 		memcpy(&m_output_format, pOutputLockedParameters[0].pFormat, sizeof(m_output_format));
 
 		m_time_per_frame = 1.0f / float(m_input_format.nSamplesPerSec);
+
+		_ASSERT(m_hrtf_data_set->has_sample_rate(m_input_format.nSamplesPerSec));
+
 		if (m_hrtf_data_set->has_sample_rate(m_input_format.nSamplesPerSec))
 		{
 			m_hrtf_data = &m_hrtf_data_set->get_sample_rate_data(m_input_format.nSamplesPerSec);
@@ -150,9 +168,9 @@ void HrtfXapoEffect::bypass(const float * pInput, float * pOutput, const UINT32 
 
 void HrtfXapoEffect::convolve(const UINT32 frame_index, DirectionData& hrtf_data, float& output)
 {
-	const UINT32 start_signal_index = m_history_size + frame_index - hrtf_data.delay;
+	const int start_signal_index = m_history_size + frame_index - static_cast<int>(hrtf_data.delay);
 
-	_ASSERT(static_cast<int>(start_signal_index) - static_cast<int>(hrtf_data.impulse_response.size()) > 0);
+	_ASSERT(static_cast<int>(start_signal_index) - static_cast<int>(hrtf_data.impulse_response.size()) >= 0);
 
 #if 1
 

@@ -8,8 +8,17 @@
 #include <xaudio2-hook/common_types.h>
 
 
+class ISound3DRegistry;
 class XAudio2SourceVoiceProxy;
 class XAudio2VoiceProxy;
+
+class TailVoiceDescriptor
+{
+public:
+	std::shared_ptr<IXAudio2SubmixVoice> voice;
+	UINT32 flags;
+	bool isSpatialized;
+};
 
 class Node
 {
@@ -28,7 +37,7 @@ public:
 	std::shared_ptr<IXAudio2Voice> proxyVoice;
 	std::shared_ptr<IXAudio2Voice> mainVoice;
 	// maps proxy send to actual tail voice
-	std::map<IXAudio2Voice*, std::shared_ptr<IXAudio2SubmixVoice>> tailVoices;
+	std::map<Node*, TailVoiceDescriptor> tailVoices;
 
 	UINT32 actualProcessingStage;
 	UINT32 inputChannelsCount;
@@ -40,7 +49,7 @@ class AudioGraphMapper
 {
 public:
 	// AudioGraphMapper does not own xaudio
-	AudioGraphMapper(IXAudio2 * xaudio);
+	AudioGraphMapper(IXAudio2 * xaudio, ISound3DRegistry * spatialSoundRegistry);
 	AudioGraphMapper(const AudioGraphMapper &) = delete;
 	AudioGraphMapper& operator=(const AudioGraphMapper& other) = delete;
 
@@ -71,6 +80,7 @@ public:
 
 private:
 	IXAudio2 * m_xaudio;
+	ISound3DRegistry * m_spatialSoundRegistry;
 	std::map<IXAudio2Voice*, std::unique_ptr<Node>> m_nodes;
 	Node * m_masteringNode;
 	EdgeRepository<Node*> m_edges;
@@ -81,5 +91,7 @@ private:
 	const Node * getNodeForProxyVoice(IXAudio2Voice* pDestination) const;
 	Node * getNodeForProxyVoice(IXAudio2Voice* pDestination);
 	void setupCommonCallbacks(XAudio2VoiceProxy* proxyVoice, const std::shared_ptr<IXAudio2Voice> & actualVoice);
-	void updateSendsForVoice(XAudio2VoiceProxy* proxyVoice);
+	void resetSendsForVoice(XAudio2VoiceProxy* proxyVoice);
+	void updateSendsForMainVoice(Node * node);
+	std::shared_ptr<IXAudio2SubmixVoice> createTailVoice(Node * senderNode, Node * sendNode, const effect_chain & effectChain);
 };
