@@ -13,25 +13,25 @@ public:
 
 	explicit VoiceSends(const std::vector<XAUDIO2_SEND_DESCRIPTOR> & sends)
 		: m_sendToMasterOnly(false)
-		, m_sends(sends)
+		, m_voices(sends)
 	{
 	}
 
 	explicit VoiceSends(std::vector<XAUDIO2_SEND_DESCRIPTOR> && sends)
 		: m_sendToMasterOnly(false)
-		, m_sends(sends)
+		, m_voices(sends)
 	{
 	}
 
 	VoiceSends(const VoiceSends & other)
 		: m_sendToMasterOnly(other.m_sendToMasterOnly)
-		, m_sends(other.m_sends)
+		, m_voices(other.m_voices)
 	{
 	}
 
 	VoiceSends(VoiceSends && other)
 		: m_sendToMasterOnly(other.m_sendToMasterOnly)
-		, m_sends(std::move(other.m_sends))
+		, m_voices(std::move(other.m_voices))
 	{
 
 	}
@@ -41,9 +41,9 @@ public:
 		return m_sendToMasterOnly;
 	}
 
-	const std::vector<XAUDIO2_SEND_DESCRIPTOR> & getSends() const
+	const std::vector<XAUDIO2_SEND_DESCRIPTOR> & getVoices() const
 	{
-		return m_sends;
+		return m_voices;
 	}
 
 	VoiceSends & operator=(const VoiceSends& other)
@@ -51,7 +51,7 @@ public:
 		if (this == &other)
 			return *this;
 		m_sendToMasterOnly = other.m_sendToMasterOnly;
-		m_sends = other.m_sends;
+		m_voices = other.m_voices;
 		return *this;
 	}
 
@@ -60,11 +60,11 @@ public:
 		if (this == &other)
 			return *this;
 		m_sendToMasterOnly = other.m_sendToMasterOnly;
-		m_sends = std::move(other.m_sends);
+		m_voices = std::move(other.m_voices);
 		return *this;
 	}
 
 private:
 	bool m_sendToMasterOnly;
-	std::vector<XAUDIO2_SEND_DESCRIPTOR> m_sends;
+	std::vector<XAUDIO2_SEND_DESCRIPTOR> m_voices;
 };

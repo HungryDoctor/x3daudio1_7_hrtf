@@ -8,7 +8,7 @@ class EdgeRepository
 {
 public:
 
-	void addEdge(T & predecessor, T & successor)
+	void addEdge(T predecessor, T successor)
 	{
 		if (m_predecessorToSuccessors.find(predecessor) == m_predecessorToSuccessors.end())
 		{
@@ -24,23 +24,37 @@ public:
 		m_successorToPredecessors.at(successor).insert(predecessor);
 	}
 
-	void removeEdge(T & predecessor, T & successor)
+	void removeEdge(T predecessor, T successor)
 	{
 		{
 			auto & record = m_predecessorToSuccessors.at(predecessor);
 			record.erase(record.find(successor));
 			if (record.size() == 0)
-				m_predecessorToSuccessors.erase(m_predecessorToSuccessors.find(record));
+				m_predecessorToSuccessors.erase(m_predecessorToSuccessors.find(predecessor));
 		}
 		{
 			auto & record = m_successorToPredecessors.at(successor);
 			record.erase(record.find(predecessor));
 			if (record.size() == 0)
-				m_successorToPredecessors.erase(m_successorToPredecessors.find(record));
+				m_successorToPredecessors.erase(m_successorToPredecessors.find(successor));
 		}
 	}
 
-	bool edgeExists(T & predecessor, T & successor) const
+	void removeAllSuccessors(T predecessor)
+	{
+		auto record = m_predecessorToSuccessors.find(predecessor);
+
+		if (record == m_predecessorToSuccessors.end())
+			return;
+
+		std::set<T> successors = record->second;
+		for (auto successor : successors)
+		{
+			removeEdge(predecessor, successor);
+		}
+	}
+
+	bool edgeExists(T predecessor, T successor) const
 	{
 		auto it = m_predecessorToSuccessors.at(predecessor);
 		if (it == m_predecessorToSuccessors.end())
@@ -49,7 +63,7 @@ public:
 		return it->find(predecessor) != it->end();
 	}
 
-	std::set<T> getSuccessors(T & vertex) const
+	std::set<T> getSuccessors(T vertex) const
 	{
 		auto it = m_predecessorToSuccessors.find(vertex);
 		if (it == m_predecessorToSuccessors.end())
@@ -58,7 +72,7 @@ public:
 			return *it;
 	}
 
-	std::set<T> getPredecessors(T & vertex) const
+	std::set<T> getPredecessors(T vertex) const
 	{
 		auto it = m_successorToPredecessors.find(vertex);
 		if (it == m_successorToPredecessors.end())

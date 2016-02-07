@@ -33,4 +33,6 @@ public:
 	STDMETHOD_(void, GetOutputMatrix)(IXAudio2Voice * pDestinationVoice, UINT32 SourceChannels, UINT32 DestinationChannels, float * pLevelMatrix) override;
 	STDMETHOD_(void, DestroyVoice)() override;
 
+	const IXAudio2Voice* asXAudio2Voice() const override { return this; }
+	IXAudio2Voice* asXAudio2Voice() override { return this; }
 };

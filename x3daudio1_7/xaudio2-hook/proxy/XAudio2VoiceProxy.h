@@ -76,6 +76,9 @@ public:
 
 	void destroyVoice();
 
+	virtual const IXAudio2Voice * asXAudio2Voice() const = 0;
+	virtual IXAudio2Voice * asXAudio2Voice() = 0;
+
 	sends_voice_callback onSetOutputVoices;
 	immediate_voice_callback onSetEffectChain;
 	effect_voice_callback onSetEffectEnabled;

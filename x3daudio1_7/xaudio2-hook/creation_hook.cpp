@@ -12,6 +12,8 @@
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 
+//#define CREATE_AUTHENTIC_DEBUG_XAUDIO
+
 DEFINE_CLSID(XAudio2_0, fac23f48, 31f5, 45a8, b4, 9b, 52, 25, d6, 14, 01, aa);
 DEFINE_CLSID(XAudio2_1, e21a7345, eb21, 468e, be, 50, 80, 4d, b9, 7c, f7, 08);
 DEFINE_CLSID(XAudio2_2, b802058a, 464a, 42db, bc, 10, b6, 50, d6, f2, 58, 6a);
@@ -74,7 +76,11 @@ HRESULT WINAPI Hook::CoCreateInstance(REFCLSID rclsid, LPUNKNOWN pUnkOuter, DWOR
 		if (FAILED(hr))
 			return hr;
 		
+#if defined(CREATE_AUTHENTIC_DEBUG_XAUDIO)
+		return XAudio2Proxy::CreateActualDebugInstance(originalObject.Detach(), riid, ppv);
+#else
 		return XAudio2Proxy::CreateInstance(originalObject.Detach(), riid, ppv);
+#endif
 	}
 #endif
 

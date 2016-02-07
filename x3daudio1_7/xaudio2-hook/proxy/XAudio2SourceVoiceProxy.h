@@ -78,6 +78,9 @@ public:
 		return m_voiceCallback;
 	}
 
+	const IXAudio2Voice* asXAudio2Voice() const override { return this; }
+	IXAudio2Voice* asXAudio2Voice() override { return this; }
+
 	state_getter stateGetter;
 	start_stop_voice_callback onStart;
 	start_stop_voice_callback onStop;

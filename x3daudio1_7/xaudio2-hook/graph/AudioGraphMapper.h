@@ -11,11 +11,29 @@
 class XAudio2SourceVoiceProxy;
 class XAudio2VoiceProxy;
 
-class VoiceDescriptor
+class Node
 {
 public:
-	IXAudio2Voice * proxyVoice;
-	IXAudio2Voice * actualVoice;
+	Node() = default;
+	Node(const Node& other) = delete;
+	Node& operator=(const Node& other) = delete;
+
+	~Node()
+	{
+		proxyVoice.reset();
+		mainVoice.reset();
+		tailVoices.clear(); // must be destroyed last
+	}
+
+	std::shared_ptr<IXAudio2Voice> proxyVoice;
+	std::shared_ptr<IXAudio2Voice> mainVoice;
+	// maps proxy send to actual tail voice
+	std::map<IXAudio2Voice*, std::shared_ptr<IXAudio2SubmixVoice>> tailVoices;
+
+	UINT32 actualProcessingStage;
+	UINT32 inputChannelsCount;
+	UINT32 inputSampleRate;
+	UINT32 mainOutputChannelsCount;
 };
 
 class AudioGraphMapper
@@ -23,7 +41,7 @@ class AudioGraphMapper
 public:
 	// AudioGraphMapper does not own xaudio
 	AudioGraphMapper(IXAudio2 * xaudio);
-	AudioGraphMapper(const AudioGraphMapper &) = delete;
+	AudioGraphMapper(const AudioGraphMapper &);
 	~AudioGraphMapper();
 	IXAudio2SourceVoice * CreateSourceVoice(
 		const WAVEFORMATEX * pSourceFormat,
@@ -51,12 +69,15 @@ public:
 
 private:
 	IXAudio2 * m_xaudio;
-	std::map<IXAudio2Voice*, VoiceDescriptor> m_voices;
-	VoiceDescriptor * m_masteringVoice;
-	EdgeRepository<VoiceDescriptor*> m_edges;
+	std::map<IXAudio2Voice*, std::unique_ptr<Node>> m_nodes;
+	Node * m_masteringNode;
+	EdgeRepository<Node*> m_edges;
+
+	static XAUDIO2_VOICE_SENDS _emptySends;
 
 	VoiceSends mapProxySendsToActualOnes(const VoiceSends & proxySends) const;
-	const VoiceDescriptor & getDescriptorForProxyVoice(IXAudio2Voice* pDestination) const;
-	VoiceDescriptor & getDescriptorForProxyVoice(IXAudio2Voice* pDestination);
+	const Node * getNodeForProxyVoice(IXAudio2Voice* pDestination) const;
+	Node * getNodeForProxyVoice(IXAudio2Voice* pDestination);
 	void setupCommonCallbacks(XAudio2VoiceProxy* proxyVoice, const std::shared_ptr<IXAudio2Voice> & actualVoice);
+	void updateSendsForVoice(XAudio2VoiceProxy* proxyVoice);
 };

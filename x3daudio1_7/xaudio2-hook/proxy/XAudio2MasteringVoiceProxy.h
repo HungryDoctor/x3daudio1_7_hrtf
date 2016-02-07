@@ -38,6 +38,9 @@ public:
 		return m_deviceIndex;
 	}
 
+	const IXAudio2Voice* asXAudio2Voice() const override { return this; }
+	IXAudio2Voice* asXAudio2Voice() override { return this; }
+
 private:
 	const UINT32 m_deviceIndex;
 };

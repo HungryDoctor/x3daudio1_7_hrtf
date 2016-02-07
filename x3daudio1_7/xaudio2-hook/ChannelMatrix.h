@@ -6,6 +6,21 @@
 class ChannelMatrix
 {
 public:
+	ChannelMatrix()
+		: m_sourceCount(0)
+		, m_destinationCount(0)
+	{
+
+	}
+
+	ChannelMatrix(unsigned int sourceCount, unsigned int destinationCount)
+		: m_sourceCount(sourceCount)
+		, m_destinationCount(destinationCount)
+		, m_values(sourceCount * destinationCount)
+	{
+		
+	}
+
 	ChannelMatrix(const float * values, unsigned int sourceCount, unsigned int destinationCount)
 		: m_sourceCount(sourceCount)
 		, m_destinationCount(destinationCount)
@@ -27,10 +42,16 @@ public:
 
 	float getValue(unsigned source, unsigned destination) const
 	{
-		if (source >= m_sourceCount || destination >= m_destinationCount)
-			throw std::logic_error("Accessing element out of matrix bounds.");
+		_ASSERT(source < m_sourceCount || destination < m_destinationCount);
 
 		return m_values[destination * m_sourceCount + source];
+	}
+
+	void setValue(unsigned source, unsigned destination, float value)
+	{
+		_ASSERT(source < m_sourceCount || destination < m_destinationCount);
+
+		m_values[destination * m_sourceCount + source] = value;
 	}
 
 private:

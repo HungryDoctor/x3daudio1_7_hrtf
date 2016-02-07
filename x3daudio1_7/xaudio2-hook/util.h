@@ -110,10 +110,122 @@ inline std::wstring get_name(const void * ptr)
 	return ss.str();
 }
 
-inline XAUDIO2_VOICE_SENDS from_voice_sends(const VoiceSends & sends)
+inline XAUDIO2_VOICE_SENDS from_voice_sends(VoiceSends & sends)
 {
+	if (sends.getSendToMasterOnly())
+		throw std::logic_error("Cannot map sends to mastering voice.");
+
 	XAUDIO2_VOICE_SENDS sendsStruct;
-	sendsStruct.SendCount = static_cast<UINT32>(sends.getSends().size());
-	sendsStruct.pSends = const_cast<XAUDIO2_SEND_DESCRIPTOR*>(&*sends.getSends().begin());
+	sendsStruct.SendCount = static_cast<UINT32>(sends.getVoices().size());
+	sendsStruct.pSends = const_cast<XAUDIO2_SEND_DESCRIPTOR*>(&*sends.getVoices().begin());
 	return sendsStruct;
+}
+
+inline XAUDIO2_VOICE_SENDS empty_sends()
+{
+	XAUDIO2_VOICE_SENDS emptySends;
+	emptySends.SendCount = 0;
+	emptySends.pSends = nullptr;
+	return emptySends;
+}
+
+inline ChannelMatrix adaptChannelMatrixToStereoOutput(const ChannelMatrix & sourceMatrix)
+{
+	/* According to MSDN:
+	Channels		Interpretation
+	1				Always maps to FrontLeft and FrontRight at full scale in both speakers (special case for mono sounds)
+	2				FrontLeft, FrontRight (basic stereo configuration)
+	3				FrontLeft, FrontRight, LowFrequency (2.1 configuration)
+	4				FrontLeft, FrontRight, BackLeft, BackRight (quadraphonic)
+	5				FrontLeft, FrontRight, FrontCenter, SideLeft, SideRight (5.0 configuration)
+	6				FrontLeft, FrontRight, FrontCenter, LowFrequency, SideLeft, SideRight (5.1 configuration) (see the following remarks)
+	7				FrontLeft, FrontRight, FrontCenter, LowFrequency, SideLeft, SideRight, BackCenter (6.1 configuration)
+	8				FrontLeft, FrontRight, FrontCenter, LowFrequency, BackLeft, BackRight, SideLeft, SideRight (7.1 configuration)
+	9 or more		No implicit positions (one-to-one mapping)
+	*/
+
+	if (sourceMatrix.getDestinationCount() == 1)
+	{
+		ChannelMatrix matrix(sourceMatrix.getSourceCount(), 2);
+		for (UINT32 i = 0; i < sourceMatrix.getSourceCount(); i++)
+		{
+			matrix.setValue(i, 0, sourceMatrix.getValue(i, 0));
+			matrix.setValue(i, 1, sourceMatrix.getValue(i, 0));
+		}
+		return matrix;
+	}
+	else if (sourceMatrix.getDestinationCount() == 2)
+	{
+		return sourceMatrix;
+	}
+	else if (sourceMatrix.getDestinationCount() == 3)
+	{
+		ChannelMatrix matrix(sourceMatrix.getSourceCount(), 2);
+
+		for (UINT32 i = 0; i < sourceMatrix.getSourceCount(); i++)
+		{
+			matrix.setValue(i, 0, sourceMatrix.getValue(i, 0) + sourceMatrix.getValue(i, 2) * 0.5f);
+			matrix.setValue(i, 1, sourceMatrix.getValue(i, 1) + sourceMatrix.getValue(i, 2) * 0.5f);
+		}
+		return matrix;
+	}
+	else if (sourceMatrix.getDestinationCount() == 4)
+	{
+		ChannelMatrix matrix(sourceMatrix.getSourceCount(), 2);
+
+		for (UINT32 i = 0; i < sourceMatrix.getSourceCount(); i++)
+		{
+			matrix.setValue(i, 0, sourceMatrix.getValue(i, 0) * 0.667f + sourceMatrix.getValue(i, 2) * 0.333f);
+			matrix.setValue(i, 1, sourceMatrix.getValue(i, 1) * 0.667f + sourceMatrix.getValue(i, 3) * 0.333f);
+		}
+		return matrix;
+	}
+	else if (sourceMatrix.getDestinationCount() == 5)
+	{
+		ChannelMatrix matrix(sourceMatrix.getSourceCount(), 2);
+
+		for (UINT32 i = 0; i < sourceMatrix.getSourceCount(); i++)
+		{
+			matrix.setValue(i, 0, sourceMatrix.getValue(i, 0) * 0.5f + sourceMatrix.getValue(i, 2) * 0.25f + sourceMatrix.getValue(i, 3) * 0.333f);
+			matrix.setValue(i, 1, sourceMatrix.getValue(i, 1) * 0.5f + sourceMatrix.getValue(i, 2) * 0.25f + sourceMatrix.getValue(i, 4) * 0.333f);
+		}
+		return matrix;
+	}
+	else if (sourceMatrix.getDestinationCount() == 6)
+	{
+		ChannelMatrix matrix(sourceMatrix.getSourceCount(), 2);
+
+		for (UINT32 i = 0; i < sourceMatrix.getSourceCount(); i++)
+		{
+			matrix.setValue(i, 0, sourceMatrix.getValue(i, 0) * 0.5f + sourceMatrix.getValue(i, 2) * 0.25f + sourceMatrix.getValue(i, 3) * 0.1f + sourceMatrix.getValue(i, 4) * 0.333f);
+			matrix.setValue(i, 1, sourceMatrix.getValue(i, 1) * 0.5f + sourceMatrix.getValue(i, 2) * 0.25f + sourceMatrix.getValue(i, 3) * 0.1f + sourceMatrix.getValue(i, 5) * 0.333f);
+		}
+		return matrix;
+	}
+	else if (sourceMatrix.getDestinationCount() == 7)
+	{
+		ChannelMatrix matrix(sourceMatrix.getSourceCount(), 2);
+
+		for (UINT32 i = 0; i < sourceMatrix.getSourceCount(); i++)
+		{
+			matrix.setValue(i, 0, sourceMatrix.getValue(i, 0) * 0.5f + sourceMatrix.getValue(i, 2) * 0.25f + sourceMatrix.getValue(i, 3) * 0.1f + sourceMatrix.getValue(i, 4) * 0.333f + sourceMatrix.getValue(i, 6) * 0.15f);
+			matrix.setValue(i, 1, sourceMatrix.getValue(i, 1) * 0.5f + sourceMatrix.getValue(i, 2) * 0.25f + sourceMatrix.getValue(i, 3) * 0.1f + sourceMatrix.getValue(i, 5) * 0.333f + sourceMatrix.getValue(i, 6) * 0.15f);
+		}
+		return matrix;
+	}
+	else if (sourceMatrix.getDestinationCount() == 8)
+	{
+		ChannelMatrix matrix(sourceMatrix.getSourceCount(), 2);
+
+		for (UINT32 i = 0; i < sourceMatrix.getSourceCount(); i++)
+		{
+			matrix.setValue(i, 0, sourceMatrix.getValue(i, 0) * 0.5f + sourceMatrix.getValue(i, 2) * 0.25f + sourceMatrix.getValue(i, 3) * 0.1f + sourceMatrix.getValue(i, 4) * 0.333f + sourceMatrix.getValue(i, 6) * 0.333f);
+			matrix.setValue(i, 1, sourceMatrix.getValue(i, 1) * 0.5f + sourceMatrix.getValue(i, 2) * 0.25f + sourceMatrix.getValue(i, 3) * 0.1f + sourceMatrix.getValue(i, 5) * 0.333f + sourceMatrix.getValue(i, 7) * 0.333f);
+		}
+		return matrix;
+	}
+	else
+	{
+		throw std::logic_error("Matrix has more than 8 channels");
+	}
 }
