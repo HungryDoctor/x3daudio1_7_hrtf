@@ -59,7 +59,7 @@ float X3DAudioProxy::sample_volume_curve(const X3DAUDIO_EMITTER* pEmitter, float
 
 	if (pEmitter->pVolumeCurve->PointCount == 0)
 	{
-		logger::log("Warning: no points in the volume curve");
+		logger::logRelease("Warning: no points in the volume curve");
 		return 0;
 	}
 

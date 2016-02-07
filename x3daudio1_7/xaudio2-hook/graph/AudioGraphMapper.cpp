@@ -275,10 +275,10 @@ void AudioGraphMapper::setupCommonCallbacks(XAudio2VoiceProxy* proxyVoice, const
 		if (does_matrix_contain_id(clientMatrix))
 		{
 			if (node->mainOutputChannelsCount > 2)
-				logger::log(L"WARNING: onSetOutputMatrix ", source, " Trying to spatialize voice with more than two channels");
+				logger::logRelease(L"WARNING: onSetOutputMatrix ", source, " Trying to spatialize voice with more than two channels");
 
 			if (destinationNode->inputChannelsCount != 2)
-				logger::log(L"WARNING: onSetOutputMatrix ", source, " Trying to send spatialized sound to non-stereo voice ", destinationNode->proxyVoice.get());
+				logger::logRelease(L"WARNING: onSetOutputMatrix ", source, " Trying to send spatialized sound to non-stereo voice ", destinationNode->proxyVoice.get());
 
 			if (!tailVoiceDescriptor.isSpatialized)
 			{
@@ -286,7 +286,7 @@ void AudioGraphMapper::setupCommonCallbacks(XAudio2VoiceProxy* proxyVoice, const
 
 				XAUDIO2_EFFECT_DESCRIPTOR effectDesc;
 				effectDesc.pEffect = static_cast<IUnknown *>(static_cast<IXAPOParameters *>(HrtfXapoEffect::CreateInstance()));
-				effectDesc.InitialState = true;
+				effectDesc.InitialState = false;
 				effectDesc.OutputChannels = 2;
 
 				effect_chain hrtfEffectChain{ effectDesc };
@@ -305,12 +305,13 @@ void AudioGraphMapper::setupCommonCallbacks(XAudio2VoiceProxy* proxyVoice, const
 			auto sound3d = m_spatialSoundRegistry->GetEntry(id);
 
 			HrtfXapoParam params;
-			params.volume_multiplier = 0 * sound3d.volume_multiplier;
+			params.volume_multiplier = sound3d.volume_multiplier;
 			params.elevation = sound3d.elevation;
 			params.azimuth = sound3d.azimuth;
 			params.distance = sound3d.distance;
 
 			tailVoiceDescriptor.voice->SetEffectParameters(0, &params, sizeof(params), XAUDIO2_COMMIT_NOW);
+			tailVoiceDescriptor.voice->EnableEffect(0, XAUDIO2_COMMIT_NOW);
 		}
 		else
 		{

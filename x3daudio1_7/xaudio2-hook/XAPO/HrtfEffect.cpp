@@ -79,7 +79,7 @@ HRESULT HrtfXapoEffect::LockForProcess(UINT32 InputLockedParameterCount, const X
 
 		m_time_per_frame = 1.0f / float(m_input_format.nSamplesPerSec);
 
-		_ASSERT(m_hrtf_data_set->has_sample_rate(m_input_format.nSamplesPerSec));
+		//_ASSERT(m_hrtf_data_set->has_sample_rate(m_input_format.nSamplesPerSec));
 
 		if (m_hrtf_data_set->has_sample_rate(m_input_format.nSamplesPerSec))
 		{
@@ -93,6 +93,7 @@ HRESULT HrtfXapoEffect::LockForProcess(UINT32 InputLockedParameterCount, const X
 		}
 		else
 		{
+			logger::logRelease("ERROR [HRTF]: There's no dataset for sample rate ", m_input_format.nSamplesPerSec, " Hz");
 			m_hrtf_data = nullptr;
 		}
 	}

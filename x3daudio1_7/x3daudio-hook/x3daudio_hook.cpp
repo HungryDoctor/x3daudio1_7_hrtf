@@ -25,7 +25,7 @@ namespace Hook
 {
 	extern "C" __declspec(dllexport) void STDAPIVCALLTYPE X3DAudioInitialize(UINT32 SpeakerChannelMask, FLOAT32 SpeedOfSound, X3DAUDIO_CUSTOM_HANDLE Instance)
 	{
-		logger::log("X3DAudioInitialize");
+		logger::logDebug("X3DAudioInitialize");
 		auto ptr = std::unique_ptr<X3DAudioProxy>(new X3DAudioProxy(x3daudio1_7, &Sound3DRegistry::GetInstance(), SpeakerChannelMask, SpeedOfSound));
 		Instance->proxy = ptr.get();
 

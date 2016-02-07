@@ -3,7 +3,7 @@
 
 #include <logger.h>
 
-#define TRACE_CALL() logger::log(__FUNCTIONW__, L" ", this)
+#define TRACE_CALL() logger::logDebug(__FUNCTIONW__, L" ", this)
 
 XAudio2VoiceProxy::XAudio2VoiceProxy(UINT32 inputChannels, UINT32 inputSampleRate, UINT32 flags, UINT32 processingStage, const VoiceSends & sends, const effect_chain & chain)
 	: m_inputSampleRate(inputSampleRate)

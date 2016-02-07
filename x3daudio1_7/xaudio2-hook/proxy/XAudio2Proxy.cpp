@@ -9,7 +9,7 @@
 
 XAudio2Proxy::XAudio2Proxy()
 {
-	logger::log("Constructing XAudio2Proxy");
+	logger::logDebug("Constructing XAudio2Proxy");
 }
 
 HRESULT XAudio2Proxy::FinalConstruct()
@@ -87,9 +87,9 @@ STDMETHODIMP XAudio2Proxy::GetDeviceDetails(UINT32 Index, XAUDIO2_DEVICE_DETAILS
 
 STDMETHODIMP XAudio2Proxy::Initialize(UINT32 Flags, XAUDIO2_PROCESSOR XAudio2Processor)
 {
-	logger::log("Initializing XAudio2Proxy");
+	logger::logDebug("Initializing XAudio2Proxy");
 	HRESULT result = m_original->Initialize(Flags | XAUDIO2_DEBUG_ENGINE, XAudio2Processor);
-	logger::log(L"(Not)constructed XAudio2Proxy with result " + std::to_wstring(result));
+	logger::logDebug(L"(Not)constructed XAudio2Proxy with result " + std::to_wstring(result));
 
 	m_graph.reset(m_graph_factory(m_original));
 

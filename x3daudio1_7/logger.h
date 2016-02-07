@@ -4,19 +4,29 @@
 
 namespace logger
 {
-	void log(const std::wstring & message);
+	template <typename T1, typename ... Ts>
+	void logDebug(const T1 & t1, const Ts & ... ts)
+	{
+#ifdef _DEBUG
+		std::wstringstream ss;
+		details::apped_to_stream(ss, t1, ts ...);
+		details::log(ss.str());
+#endif
+	}
 
 	template <typename T1, typename ... Ts>
-	void log(const T1 & t1, const Ts & ... ts)
+	void logRelease(const T1 & t1, const Ts & ... ts)
 	{
 		std::wstringstream ss;
 		details::apped_to_stream(ss, t1, ts ...);
-		log(ss.str());
+		details::log(ss.str());
 	}
 
 
 	namespace details
 	{
+		void log(const std::wstring & message);
+
 		template <typename T1, typename ... Ts>
 		void apped_to_stream(std::wstringstream & ss, const T1 & t1, const Ts & ... ts)
 		{
