@@ -38,8 +38,8 @@ void X3DAudioProxy::X3DAudioCalculate(const X3DAUDIO_LISTENER * pListener, const
 	auto distance = math::length(listener_to_emitter);
 
 	entry.volume_multiplier = sample_volume_curve(pEmitter, distance);
-	entry.azimuth = std::atan2(relative_position[0], relative_position[2]);
-	entry.elevation = std::asin(math::normalize(relative_position)[1]);
+	entry.azimuth = distance > std::numeric_limits<float>::epsilon() ? std::atan2(relative_position[0], relative_position[2]) : 0.0f;
+	entry.elevation = distance > std::numeric_limits<float>::epsilon() ? std::asin(math::normalize(relative_position)[1]) : 0.0f;
 	entry.distance = distance;
 
 	auto id = m_registry->CreateEntry(entry);
