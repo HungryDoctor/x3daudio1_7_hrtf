@@ -41,7 +41,9 @@ class AudioGraphMapper
 public:
 	// AudioGraphMapper does not own xaudio
 	AudioGraphMapper(IXAudio2 * xaudio);
-	AudioGraphMapper(const AudioGraphMapper &);
+	AudioGraphMapper(const AudioGraphMapper &) = delete;
+	AudioGraphMapper& operator=(const AudioGraphMapper& other) = delete;
+
 	~AudioGraphMapper();
 	IXAudio2SourceVoice * CreateSourceVoice(
 		const WAVEFORMATEX * pSourceFormat,

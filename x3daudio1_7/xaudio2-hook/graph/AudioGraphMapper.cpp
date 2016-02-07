@@ -13,9 +13,6 @@
 
 XAUDIO2_VOICE_SENDS AudioGraphMapper::_emptySends = empty_sends();
 
-AudioGraphMapper::AudioGraphMapper(const AudioGraphMapper&)
-{
-}
 
 AudioGraphMapper::AudioGraphMapper(IXAudio2* xaudio)
 	: m_xaudio(xaudio)
