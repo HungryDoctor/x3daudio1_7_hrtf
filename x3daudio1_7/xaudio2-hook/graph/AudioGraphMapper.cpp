@@ -111,7 +111,7 @@ IXAudio2SourceVoice* AudioGraphMapper::CreateSourceVoice(const WAVEFORMATEX* pSo
 
 IXAudio2SubmixVoice* AudioGraphMapper::CreateSubmixVoice(UINT32 InputChannels, UINT32 InputSampleRate, UINT32 Flags, UINT32 ProcessingStage, const XAUDIO2_VOICE_SENDS* pSendList, const XAUDIO2_EFFECT_CHAIN* pEffectChain)
 {
-	const UINT32 actualProcessingStage = ProcessingStage * 2; // we make room for intermediate 'tail' voices
+	const UINT32 actualProcessingStage = std::min(ProcessingStage, UINT_MAX / 2 - 1) * 2 + 1; // we make room for intermediate 'tail' voices. May fails in some cases.
 	auto proxyVoice = new XAudio2SubmixVoiceProxy(InputChannels, InputSampleRate, Flags, ProcessingStage, from_XAUDIO2_VOICE_SENDS(pSendList), from_XAUDIO2_EFFECT_CHAIN(pEffectChain));
 
 	IXAudio2SubmixVoice * actualVoiceRawPtr;

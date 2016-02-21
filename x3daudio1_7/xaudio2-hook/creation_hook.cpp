@@ -62,7 +62,10 @@ const size_t g_FunctionsCount = sizeof(g_Functions) / sizeof(FunctionInfo);
 HRESULT WINAPI Hook::CoCreateInstance(REFCLSID rclsid, LPUNKNOWN pUnkOuter, DWORD dwClsContext, REFIID riid, LPVOID * ppv)
 {
 #if !defined(BYPASS_COM_HOOK)
-	if (rclsid == __uuidof(XAudio2) || rclsid == __uuidof(XAudio2_6) || rclsid == __uuidof(XAudio2_5) || rclsid == __uuidof(XAudio2_4) || rclsid == __uuidof(XAudio2_3) || rclsid == __uuidof(XAudio2_2) || rclsid == __uuidof(XAudio2_1) || rclsid == __uuidof(XAudio2_0))
+	if (
+		rclsid == __uuidof(XAudio2) || rclsid == __uuidof(XAudio2_6) || rclsid == __uuidof(XAudio2_5) || rclsid == __uuidof(XAudio2_4) || rclsid == __uuidof(XAudio2_3) || rclsid == __uuidof(XAudio2_2) || rclsid == __uuidof(XAudio2_1) || rclsid == __uuidof(XAudio2_0)
+		|| rclsid == __uuidof(XAudio2_Debug)
+		)
 	{
 		if (pUnkOuter)
 			return CLASS_E_NOAGGREGATION;

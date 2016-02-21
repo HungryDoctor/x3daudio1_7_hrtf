@@ -19,6 +19,13 @@ void X3DAudioProxy::X3DAudioCalculate(const X3DAUDIO_LISTENER * pListener, const
 {
 	m_original.X3DAudioCalculate(m_handle, pListener, pEmitter, Flags, pDSPSettings);
 
+	if (Flags & X3DAUDIO_CALCULATE_DELAY)
+	{
+		_ASSERT(pDSPSettings->pDelayTimes != nullptr);
+		// The ITD is simulated with HRTF DSP, so here we just take the minimum one.
+		pDSPSettings->pDelayTimes[0] = pDSPSettings->pDelayTimes[1] = std::min(pDSPSettings->pDelayTimes[0], pDSPSettings->pDelayTimes[1]);
+	}
+
 	// changing left-hand to ortodox right-hand
 	math::vector3 listener_position(pListener->Position.x, pListener->Position.y, pListener->Position.z);
 	math::vector3 emitter_position(pEmitter->Position.x, pEmitter->Position.y, pEmitter->Position.z);
