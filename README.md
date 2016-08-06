@@ -12,7 +12,7 @@ Visit [releases page](https://github.com/kosumosu/x3daudio1_7_hrtf/releases) and
 
 ### Installation
 Unpack the contents of the package to the game folder where the main executable is located. Ensure it is the exe of the game itself, not a launcher. If your game uses prior version of x3daudio (earlier than 1.7), you can try to rename the dll to the one the game uses. Run the game. Enjoy!
-Note: some anti-cheat software (e.g. BattleEye) won't let you hook anything in the game, so you have disable it. That means no HRTF in multiplayer.
+Note: some anti-cheat software (e.g. BattleEye) won't let you hook anything into the game, so you will have to disable it. That means no HRTF in multiplayer.
 
 #### Notes for developers
 ##### How it works
